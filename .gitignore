@@ -1,0 +1,46 @@
+# Dependencies
+/vendor/
+/node_modules/
+composer.lock
+
+# IDE
+/.idea/
+/.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor swap files
+*.swp
+*.swo
+*~
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# PHPStan
+/.phpstan.cache/
+phpstan.neon.local
+
+# PHP CS Fixer / Pint
+/.php-cs-fixer.cache
+/.pint.cache
+
+# PHPUnit / Pest
+.phpunit.result.cache
+.phpunit.cache/
+/coverage/
+/.phpunit.coverage.cache
+
+# Build artifacts
+/build/
+/dist/
+
+# Logs
+*.log
+

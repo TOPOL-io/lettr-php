@@ -1,0 +1,29 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Lettr\Contracts;
+
+use Lettr\Exceptions\LettrException;
+
+interface TransporterContract
+{
+    /**
+     * Send a POST request to the API.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     *
+     * @throws LettrException
+     */
+    public function post(string $uri, array $data): array;
+
+    /**
+     * Send a GET request to the API.
+     *
+     * @return array<string, mixed>
+     *
+     * @throws LettrException
+     */
+    public function get(string $uri): array;
+}

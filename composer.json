@@ -1,0 +1,50 @@
+{
+    "name": "lettr/lettr-php",
+    "description": "Lettr PHP SDK - Send emails via Lettr API",
+    "keywords": ["php", "lettr", "sdk", "api", "client", "email"],
+    "homepage": "https://uselettr.com/",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Lettr",
+            "homepage": "https://uselettr.com/"
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "guzzlehttp/guzzle": "^7.5"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.18",
+        "phpstan/phpstan": "^2.0",
+        "pestphp/pest": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Lettr\\": "src/"
+        },
+        "files": [
+            "src/Lettr.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "lint": "pint",
+        "test": "pest",
+        "analyse": "phpstan analyse"
+    },
+    "config": {
+        "sort-packages": true,
+        "preferred-install": "dist",
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
+
