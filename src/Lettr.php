@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace Lettr;
 
 use Lettr\Contracts\TransporterContract;
+use Lettr\Services\DomainService;
 use Lettr\Services\EmailService;
+use Lettr\Services\WebhookService;
 
 /**
  * Lettr SDK entry point.
  *
  * @property-read EmailService $emails
+ * @property-read DomainService $domains
+ * @property-read WebhookService $webhooks
  */
 final class Lettr
 {
@@ -20,11 +24,15 @@ final class Lettr
     public const VERSION = '1.0.0';
 
     /**
-     * The default API base URL.
+     * The API base URL.
      */
-    public const DEFAULT_BASE_URL = 'https://app.uselettr.com';
+    public const BASE_URL = 'https://app.lettr.com/api';
 
     private ?EmailService $emailService = null;
+
+    private ?DomainService $domainService = null;
+
+    private ?WebhookService $webhookService = null;
 
     public function __construct(
         private readonly TransporterContract $client,
@@ -33,9 +41,9 @@ final class Lettr
     /**
      * Create a new Lettr instance with the given API key.
      */
-    public static function client(string $apiKey, ?string $baseUrl = null): self
+    public static function client(string $apiKey): self
     {
-        return new self(new Client($apiKey, $baseUrl));
+        return new self(new Client($apiKey));
     }
 
     /**
@@ -51,12 +59,38 @@ final class Lettr
     }
 
     /**
+     * Get the domain service.
+     */
+    public function domains(): DomainService
+    {
+        if ($this->domainService === null) {
+            $this->domainService = new DomainService($this->client);
+        }
+
+        return $this->domainService;
+    }
+
+    /**
+     * Get the webhook service.
+     */
+    public function webhooks(): WebhookService
+    {
+        if ($this->webhookService === null) {
+            $this->webhookService = new WebhookService($this->client);
+        }
+
+        return $this->webhookService;
+    }
+
+    /**
      * Magic method to access services as properties.
      */
     public function __get(string $name): mixed
     {
         return match ($name) {
             'emails' => $this->emails(),
+            'domains' => $this->domains(),
+            'webhooks' => $this->webhooks(),
             default => throw new \InvalidArgumentException("Unknown service: {$name}"),
         };
     }

@@ -19,15 +19,13 @@ final class Client implements TransporterContract
 {
     private readonly ClientInterface $httpClient;
 
-    private readonly string $baseUri;
-
     private readonly string $apiKey;
 
-    public function __construct(string $apiKey, ?string $baseUrl = null)
+    public function __construct(string $apiKey)
     {
         $this->apiKey = $apiKey;
-        $this->baseUri = $baseUrl ?? (getenv('LETTR_BASE_URL') ?: Lettr::DEFAULT_BASE_URL);
         $this->httpClient = new GuzzleClient([
+            'base_uri' => Lettr::BASE_URL,
             'timeout' => 30,
             'connect_timeout' => 10,
         ]);
@@ -50,14 +48,31 @@ final class Client implements TransporterContract
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function getWithQuery(string $uri, array $query = []): array
+    {
+        return $this->request('GET', $uri, null, $query);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function delete(string $uri): void
+    {
+        $this->request('DELETE', $uri);
+    }
+
+    /**
      * Send a request to the API.
      *
      * @param  array<string, mixed>|null  $data
+     * @param  array<string, mixed>|null  $query
      * @return array<string, mixed>
      *
      * @throws ApiException|TransporterException
      */
-    private function request(string $method, string $uri, ?array $data = null): array
+    private function request(string $method, string $uri, ?array $data = null, ?array $query = null): array
     {
         $options = [
             'headers' => [
@@ -72,8 +87,12 @@ final class Client implements TransporterContract
             $options['json'] = $data;
         }
 
+        if ($query !== null && count($query) > 0) {
+            $options['query'] = $query;
+        }
+
         try {
-            $response = $this->httpClient->request($method, $this->baseUri.$uri, $options);
+            $response = $this->httpClient->request($method, $uri, $options);
             $contents = $response->getBody()->getContents();
 
             if (trim($contents) === '') {
