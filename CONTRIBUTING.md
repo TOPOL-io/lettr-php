@@ -1,0 +1,96 @@
+# Contributing
+
+Thank you for considering contributing to the Lettr PHP SDK!
+
+## Development Setup
+
+1. Fork and clone the repository
+
+```bash
+git clone https://github.com/TOPOL-io/lettr-php.git
+cd lettr-php
+```
+
+2. Install dependencies
+
+```bash
+composer install
+```
+
+3. Create a new branch
+
+```bash
+git checkout -b feature/your-feature-name
+```
+
+## Code Style
+
+This project uses [Laravel Pint](https://laravel.com/docs/pint) for code formatting.
+
+```bash
+# Check code style
+composer lint -- --test
+
+# Fix code style
+composer lint
+```
+
+## Static Analysis
+
+This project uses [PHPStan](https://phpstan.org/) at level 8.
+
+```bash
+composer analyse
+```
+
+## Testing
+
+This project uses [Pest](https://pestphp.com/) for testing.
+
+```bash
+# Run tests
+composer test
+
+# Run specific test file
+./vendor/bin/pest tests/Unit/LettrTest.php
+```
+
+## Pull Request Process
+
+1. Ensure all tests pass
+
+```bash
+composer lint -- --test
+composer analyse
+composer test
+```
+
+2. Update documentation if needed
+
+3. Create a pull request with a clear description of changes
+
+4. Wait for review
+
+## Commit Messages
+
+Use clear, descriptive commit messages:
+
+- `feat: add webhook retry configuration`
+- `fix: handle empty response body`
+- `docs: update installation instructions`
+- `test: add email builder tests`
+- `refactor: simplify domain verification logic`
+
+## Reporting Issues
+
+When reporting issues, please include:
+
+- PHP version
+- SDK version
+- Minimal code example to reproduce
+- Expected vs actual behavior
+- Error messages (if any)
+
+## Security Vulnerabilities
+
+If you discover a security vulnerability, please email security@lettr.com instead of using the issue tracker.

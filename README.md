@@ -497,6 +497,10 @@ This project uses Pest for testing:
 composer test
 ```
 
+## Contributing
+
+Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
+
 ## License
 
 MIT License. See [LICENSE](LICENSE) for details.
