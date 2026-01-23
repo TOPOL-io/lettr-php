@@ -66,7 +66,7 @@ test('toArray returns correct structure with required fields only', function ():
         ->and($array['text'])->toBe('Plain text body');
 });
 
-test('toArray includes from name when provided', function (): void {
+test('toArray includes from_name when provided', function (): void {
     $data = SendEmailData::from([
         'from' => ['email' => 'sender@example.com', 'name' => 'Sender Name'],
         'to' => ['recipient@example.com'],
@@ -76,7 +76,8 @@ test('toArray includes from name when provided', function (): void {
 
     $array = $data->toArray();
 
-    expect($array['from'])->toBe(['email' => 'sender@example.com', 'name' => 'Sender Name']);
+    expect($array['from'])->toBe('sender@example.com')
+        ->and($array['from_name'])->toBe('Sender Name');
 });
 
 test('toArray excludes null optional fields', function (): void {

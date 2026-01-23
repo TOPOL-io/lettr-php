@@ -93,12 +93,14 @@ final readonly class SendEmailData implements Arrayable
     public function toArray(): array
     {
         $data = [
-            'from' => $this->from->name !== null
-                ? ['email' => $this->from->address, 'name' => $this->from->name]
-                : $this->from->address,
+            'from' => $this->from->address,
             'to' => $this->to->toStrings(),
             'subject' => (string) $this->subject,
         ];
+
+        if ($this->from->name !== null) {
+            $data['from_name'] = $this->from->name;
+        }
 
         if ($this->text !== null) {
             $data['text'] = $this->text;

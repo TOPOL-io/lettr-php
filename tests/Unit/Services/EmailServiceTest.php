@@ -195,7 +195,8 @@ test('sendHtml helper with from name', function (): void {
         html: '<h1>Hello</h1>',
     );
 
-    expect($transporter->lastData['from'])->toBe(['email' => 'sender@example.com', 'name' => 'Sender Name']);
+    expect($transporter->lastData['from'])->toBe('sender@example.com')
+        ->and($transporter->lastData['from_name'])->toBe('Sender Name');
 });
 
 test('sendText helper sends plain text email', function (): void {
