@@ -1,0 +1,34 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
+
+## [0.1.0] - 2025-01-23
+
+### Added
+
+- Initial release of the Lettr PHP SDK
+- **Email Service**
+  - Send emails with HTML, plain text, or templates
+  - Fluent `EmailBuilder` for composing emails
+  - Support for attachments, CC, BCC, and reply-to
+  - Email tracking and event history
+  - List emails with filtering and pagination
+- **Domain Service**
+  - Create and manage sending domains
+  - DNS verification status
+  - DKIM configuration
+- **Webhook Service**
+  - Create, update, and delete webhooks
+  - Support for multiple event types (delivered, bounced, opened, clicked, etc.)
+  - Webhook authentication (Basic, Bearer)
+- **Type-safe DTOs and Value Objects**
+  - Strongly typed request/response objects
+  - Value objects for EmailAddress, MessageId, DomainName, etc.
+- **Exception Handling**
+  - Specific exceptions for API errors (ValidationException, NotFoundException, etc.)
+  - Error codes enum for programmatic error handling
+- **PHP 8.4+ Support**
+  - Modern PHP with strict types
+  - Native enums for status values
