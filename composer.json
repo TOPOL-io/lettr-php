@@ -37,6 +37,11 @@
         "test": "pest",
         "analyse": "phpstan analyse"
     },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
     "config": {
         "sort-packages": true,
         "preferred-install": "dist",

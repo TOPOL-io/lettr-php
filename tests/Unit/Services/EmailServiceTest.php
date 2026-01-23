@@ -83,7 +83,7 @@ test('send method calls transporter with correct data', function (): void {
 
     $response = $service->send($data);
 
-    expect($transporter->lastUri)->toBe('/emails')
+    expect($transporter->lastUri)->toBe('emails')
         ->and($transporter->lastData['from'])->toBe('sender@example.com')
         ->and($transporter->lastData['to'])->toBe(['recipient@example.com'])
         ->and($transporter->lastData['subject'])->toBe('Test Subject')
@@ -107,7 +107,7 @@ test('send method works with EmailBuilder', function (): void {
 
     $response = $service->send($builder);
 
-    expect($transporter->lastUri)->toBe('/emails')
+    expect($transporter->lastUri)->toBe('emails')
         ->and($response)->toBeInstanceOf(SendEmailResponse::class)
         ->and((string) $response->requestId)->toBe('req_456');
 });
@@ -133,7 +133,7 @@ test('list method returns ListEmailsResponse', function (): void {
     $service = new EmailService($transporter);
     $response = $service->list();
 
-    expect($transporter->lastUri)->toBe('/emails')
+    expect($transporter->lastUri)->toBe('emails')
         ->and($response)->toBeInstanceOf(ListEmailsResponse::class)
         ->and($response->totalCount)->toBe(1);
 });
@@ -158,7 +158,7 @@ test('get method returns GetEmailResponse', function (): void {
     $service = new EmailService($transporter);
     $response = $service->get('req_123');
 
-    expect($transporter->lastUri)->toBe('/emails/req_123')
+    expect($transporter->lastUri)->toBe('emails/req_123')
         ->and($response)->toBeInstanceOf(GetEmailResponse::class)
         ->and($response->totalCount)->toBe(1);
 });

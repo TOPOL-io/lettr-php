@@ -14,7 +14,7 @@ use Lettr\ValueObjects\WebhookId;
  */
 final class WebhookService
 {
-    private const WEBHOOKS_ENDPOINT = '/webhooks';
+    private const WEBHOOKS_ENDPOINT = 'webhooks';
 
     public function __construct(
         private readonly TransporterContract $transporter,

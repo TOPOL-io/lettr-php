@@ -21,12 +21,12 @@ final class Lettr
     /**
      * The current SDK version.
      */
-    public const VERSION = '0.1.0';
+    public const VERSION = '0.1.1';
 
     /**
      * The API base URL.
      */
-    public const BASE_URL = 'https://app.lettr.com/api';
+    public const BASE_URL = 'https://app.lettr.com/api/';
 
     private ?EmailService $emailService = null;
 

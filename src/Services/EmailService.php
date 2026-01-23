@@ -18,7 +18,7 @@ use Lettr\ValueObjects\RequestId;
  */
 final class EmailService
 {
-    private const EMAILS_ENDPOINT = '/emails';
+    private const EMAILS_ENDPOINT = 'emails';
 
     public function __construct(
         private readonly TransporterContract $transporter,

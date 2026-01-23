@@ -18,7 +18,7 @@ use Lettr\ValueObjects\DomainName;
  */
 final class DomainService
 {
-    private const DOMAINS_ENDPOINT = '/domains';
+    private const DOMAINS_ENDPOINT = 'domains';
 
     public function __construct(
         private readonly TransporterContract $transporter,
