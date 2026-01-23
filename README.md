@@ -6,7 +6,7 @@
 [![PHP Version](https://img.shields.io/packagist/php-v/lettr/lettr-php.svg)](https://packagist.org/packages/lettr/lettr-php)
 [![License](https://img.shields.io/packagist/l/lettr/lettr-php.svg)](https://packagist.org/packages/lettr/lettr-php)
 
-Official PHP SDK for the [Lettr](https://uselettr.com) email API.
+Official PHP SDK for the [Lettr](https://lettr.com) email API.
 
 ## Requirements
 

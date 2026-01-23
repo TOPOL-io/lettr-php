@@ -2,12 +2,12 @@
     "name": "lettr/lettr-php",
     "description": "Lettr PHP SDK - Send emails via Lettr API",
     "keywords": ["php", "lettr", "sdk", "api", "client", "email"],
-    "homepage": "https://uselettr.com/",
+    "homepage": "https://lettr.com/",
     "license": "MIT",
     "authors": [
         {
             "name": "Lettr",
-            "homepage": "https://uselettr.com/"
+            "homepage": "https://lettr.com/"
         }
     ],
     "require": {
