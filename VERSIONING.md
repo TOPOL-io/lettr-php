@@ -63,19 +63,18 @@ Add a new entry to `CHANGELOG.md` following [Keep a Changelog](https://keepachan
 public const VERSION = '0.2.0';
 ```
 
-### 3. Create Git Tag
+### 3. Create Git Tag and Push
 
 ```bash
 git tag -a v0.2.0 -m "Release 0.2.0"
-git push origin v0.2.0
+git push origin main --tags
 ```
 
-### 4. Create GitHub Release
+GitHub Actions will automatically:
 
-- Go to Releases -> "Create new release"
-- Select the tag
-- Write release notes (features, fixes, breaking changes)
-- Publish
+- Run tests, linting, and static analysis
+- Create GitHub Release (if all checks pass)
+- Packagist updates via webhook
 
 ## Version History
 
