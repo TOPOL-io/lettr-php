@@ -1,5 +1,11 @@
 # Lettr PHP SDK
 
+[![CI](https://github.com/TOPOL-io/lettr-php/actions/workflows/ci.yml/badge.svg)](https://github.com/TOPOL-io/lettr-php/actions/workflows/ci.yml)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/lettr/lettr-php.svg)](https://packagist.org/packages/lettr/lettr-php)
+[![Total Downloads](https://img.shields.io/packagist/dt/lettr/lettr-php.svg)](https://packagist.org/packages/lettr/lettr-php)
+[![PHP Version](https://img.shields.io/packagist/php-v/lettr/lettr-php.svg)](https://packagist.org/packages/lettr/lettr-php)
+[![License](https://img.shields.io/packagist/l/lettr/lettr-php.svg)](https://packagist.org/packages/lettr/lettr-php)
+
 Official PHP SDK for the [Lettr](https://uselettr.com) email API.
 
 ## Requirements
