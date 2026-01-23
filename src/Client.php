@@ -102,6 +102,11 @@ final class Client implements TransporterContract
             /** @var array<string, mixed> $decoded */
             $decoded = json_decode($contents, true, 512, JSON_THROW_ON_ERROR);
 
+            // Unwrap data envelope if present
+            if (isset($decoded['data']) && is_array($decoded['data'])) {
+                return $decoded['data'];
+            }
+
             return $decoded;
         } catch (GuzzleException $e) {
             $this->handleGuzzleException($e);

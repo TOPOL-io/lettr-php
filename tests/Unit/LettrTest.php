@@ -83,7 +83,7 @@ test('throws exception for unknown service', function (): void {
 })->throws(InvalidArgumentException::class, 'Unknown service: unknownService');
 
 test('has correct version constant', function (): void {
-    expect(Lettr::VERSION)->toBe('0.1.2');
+    expect(Lettr::VERSION)->toBe('0.1.3');
 });
 
 test('has correct base url constant', function (): void {
