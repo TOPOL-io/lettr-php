@@ -3,16 +3,12 @@
 declare(strict_types=1);
 
 use Lettr\Lettr;
+use Lettr\Services\DomainService;
 use Lettr\Services\EmailService;
+use Lettr\Services\WebhookService;
 
 test('can create Lettr instance with client method', function (): void {
     $lettr = Lettr::client('test-api-key');
-
-    expect($lettr)->toBeInstanceOf(Lettr::class);
-});
-
-test('can create Lettr instance with custom base url', function (): void {
-    $lettr = Lettr::client('test-api-key', 'https://custom.api.com');
 
     expect($lettr)->toBeInstanceOf(Lettr::class);
 });
@@ -29,6 +25,30 @@ test('can access emails service via property', function (): void {
     expect($lettr->emails)->toBeInstanceOf(EmailService::class);
 });
 
+test('can access domains service via method', function (): void {
+    $lettr = Lettr::client('test-api-key');
+
+    expect($lettr->domains())->toBeInstanceOf(DomainService::class);
+});
+
+test('can access domains service via property', function (): void {
+    $lettr = Lettr::client('test-api-key');
+
+    expect($lettr->domains)->toBeInstanceOf(DomainService::class);
+});
+
+test('can access webhooks service via method', function (): void {
+    $lettr = Lettr::client('test-api-key');
+
+    expect($lettr->webhooks())->toBeInstanceOf(WebhookService::class);
+});
+
+test('can access webhooks service via property', function (): void {
+    $lettr = Lettr::client('test-api-key');
+
+    expect($lettr->webhooks)->toBeInstanceOf(WebhookService::class);
+});
+
 test('emails service is cached', function (): void {
     $lettr = Lettr::client('test-api-key');
 
@@ -38,6 +58,24 @@ test('emails service is cached', function (): void {
     expect($emails1)->toBe($emails2);
 });
 
+test('domains service is cached', function (): void {
+    $lettr = Lettr::client('test-api-key');
+
+    $domains1 = $lettr->domains();
+    $domains2 = $lettr->domains();
+
+    expect($domains1)->toBe($domains2);
+});
+
+test('webhooks service is cached', function (): void {
+    $lettr = Lettr::client('test-api-key');
+
+    $webhooks1 = $lettr->webhooks();
+    $webhooks2 = $lettr->webhooks();
+
+    expect($webhooks1)->toBe($webhooks2);
+});
+
 test('throws exception for unknown service', function (): void {
     $lettr = Lettr::client('test-api-key');
 
@@ -45,9 +83,9 @@ test('throws exception for unknown service', function (): void {
 })->throws(InvalidArgumentException::class, 'Unknown service: unknownService');
 
 test('has correct version constant', function (): void {
-    expect(Lettr::VERSION)->toBe('1.0.0');
+    expect(Lettr::VERSION)->toBe('0.1.0');
 });
 
-test('has correct default base url constant', function (): void {
-    expect(Lettr::DEFAULT_BASE_URL)->toBe('https://app.uselettr.com');
+test('has correct base url constant', function (): void {
+    expect(Lettr::BASE_URL)->toBe('https://app.lettr.com/api');
 });
