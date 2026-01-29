@@ -11,9 +11,6 @@ use Lettr\ValueObjects\Timestamp;
  */
 final readonly class TemplateDetail
 {
-    /**
-     * @param  array<string, mixed>|null  $json
-     */
     public function __construct(
         public int $id,
         public string $name,
@@ -23,7 +20,7 @@ final readonly class TemplateDetail
         public ?int $activeVersion,
         public int $versionsCount,
         public ?string $html,
-        public ?array $json,
+        public ?string $json,
         public Timestamp $createdAt,
         public Timestamp $updatedAt,
     ) {}
@@ -40,7 +37,7 @@ final readonly class TemplateDetail
      *     active_version: int|null,
      *     versions_count: int,
      *     html: string|null,
-     *     json?: array<string, mixed>|null,
+     *     json?: string|null,
      *     created_at: string,
      *     updated_at: string,
      * }  $data

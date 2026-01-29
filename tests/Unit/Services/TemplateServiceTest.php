@@ -140,7 +140,7 @@ test('get method returns TemplateDetail', function (): void {
         'active_version' => 3,
         'versions_count' => 5,
         'html' => '<html><body><h1>Welcome!</h1></body></html>',
-        'json' => ['tagName' => 'mj-body', 'children' => []],
+        'json' => '{"tagName":"mj-body","children":[]}',
         'created_at' => '2024-01-01T12:00:00+00:00',
         'updated_at' => '2024-01-15T12:00:00+00:00',
     ];
@@ -159,7 +159,7 @@ test('get method returns TemplateDetail', function (): void {
         ->and($template->activeVersion)->toBe(3)
         ->and($template->versionsCount)->toBe(5)
         ->and($template->html)->toBe('<html><body><h1>Welcome!</h1></body></html>')
-        ->and($template->json)->toBe(['tagName' => 'mj-body', 'children' => []]);
+        ->and($template->json)->toBe('{"tagName":"mj-body","children":[]}');
 });
 
 test('get method with project ID', function (): void {

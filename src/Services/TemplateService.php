@@ -63,10 +63,10 @@ final class TemplateService
          *     slug: string,
          *     project_id: int,
          *     folder_id?: int|null,
-         *     active_version: int,
+         *     active_version: int|null,
          *     versions_count: int,
-         *     html: string,
-         *     json?: array<string, mixed>|null,
+         *     html: string|null,
+         *     json?: string|null,
          *     created_at: string,
          *     updated_at: string,
          * } $response
