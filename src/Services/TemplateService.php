@@ -8,6 +8,7 @@ use Lettr\Contracts\TransporterContract;
 use Lettr\Dto\Template\CreateTemplateData;
 use Lettr\Dto\Template\ListTemplatesFilter;
 use Lettr\Dto\Template\TemplateDetail;
+use Lettr\Responses\GetMergeTagsResponse;
 use Lettr\Responses\ListTemplatesResponse;
 
 /**
@@ -114,5 +115,31 @@ final class TemplateService
         }
 
         $this->transporter->delete($endpoint);
+    }
+
+    /**
+     * Get merge tags for a template.
+     */
+    public function getMergeTags(string $slug, ?int $projectId = null, ?int $version = null): GetMergeTagsResponse
+    {
+        $query = [];
+        if ($projectId !== null) {
+            $query['project_id'] = $projectId;
+        }
+        if ($version !== null) {
+            $query['version'] = $version;
+        }
+
+        /**
+         * @var array{
+         *     project_id: int,
+         *     template_slug: string,
+         *     version: int,
+         *     merge_tags: array<int, array{key: string, required: bool, type?: string|null, children?: array<int, array{key: string, type?: string|null}>|null}>,
+         * } $response
+         */
+        $response = $this->transporter->getWithQuery(self::TEMPLATES_ENDPOINT.'/'.$slug.'/merge-tags', $query);
+
+        return GetMergeTagsResponse::from($response);
     }
 }

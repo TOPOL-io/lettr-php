@@ -6,8 +6,11 @@ use Lettr\Collections\TemplateCollection;
 use Lettr\Contracts\TransporterContract;
 use Lettr\Dto\Template\CreateTemplateData;
 use Lettr\Dto\Template\ListTemplatesFilter;
+use Lettr\Dto\Template\MergeTag;
+use Lettr\Dto\Template\MergeTagChild;
 use Lettr\Dto\Template\Template;
 use Lettr\Dto\Template\TemplateDetail;
+use Lettr\Responses\GetMergeTagsResponse;
 use Lettr\Responses\ListTemplatesResponse;
 use Lettr\Services\TemplateService;
 
@@ -388,4 +391,101 @@ test('CreateTemplateData toArray only includes non-null values', function (): vo
         'name' => 'Test',
         'project_id' => 100,
     ]);
+});
+
+test('getMergeTags returns GetMergeTagsResponse', function (): void {
+    $transporter = new TemplatesMockTransporter;
+    $transporter->response = [
+        'project_id' => 123,
+        'template_slug' => 'welcome-email',
+        'version' => 2,
+        'merge_tags' => [
+            [
+                'key' => 'user_name',
+                'required' => true,
+                'type' => 'string',
+            ],
+            [
+                'key' => 'order',
+                'required' => false,
+                'type' => 'object',
+                'children' => [
+                    ['key' => 'id', 'type' => 'integer'],
+                    ['key' => 'total', 'type' => 'number'],
+                ],
+            ],
+        ],
+    ];
+
+    $service = new TemplateService($transporter);
+    $response = $service->getMergeTags('welcome-email');
+
+    expect($transporter->lastUri)->toBe('templates/welcome-email/merge-tags')
+        ->and($transporter->lastQuery)->toBe([])
+        ->and($response)->toBeInstanceOf(GetMergeTagsResponse::class)
+        ->and($response->projectId)->toBe(123)
+        ->and($response->templateSlug)->toBe('welcome-email')
+        ->and($response->version)->toBe(2)
+        ->and($response->mergeTags)->toHaveCount(2)
+        ->and($response->mergeTags[0])->toBeInstanceOf(MergeTag::class)
+        ->and($response->mergeTags[0]->key)->toBe('user_name')
+        ->and($response->mergeTags[0]->required)->toBeTrue()
+        ->and($response->mergeTags[0]->type)->toBe('string')
+        ->and($response->mergeTags[0]->children)->toBeNull()
+        ->and($response->mergeTags[1]->key)->toBe('order')
+        ->and($response->mergeTags[1]->required)->toBeFalse()
+        ->and($response->mergeTags[1]->children)->toHaveCount(2)
+        ->and($response->mergeTags[1]->children[0])->toBeInstanceOf(MergeTagChild::class)
+        ->and($response->mergeTags[1]->children[0]->key)->toBe('id')
+        ->and($response->mergeTags[1]->children[0]->type)->toBe('integer');
+});
+
+test('getMergeTags with project ID and version', function (): void {
+    $transporter = new TemplatesMockTransporter;
+    $transporter->response = [
+        'project_id' => 456,
+        'template_slug' => 'newsletter',
+        'version' => 5,
+        'merge_tags' => [],
+    ];
+
+    $service = new TemplateService($transporter);
+    $service->getMergeTags('newsletter', projectId: 456, version: 5);
+
+    expect($transporter->lastUri)->toBe('templates/newsletter/merge-tags')
+        ->and($transporter->lastQuery)->toBe([
+            'project_id' => 456,
+            'version' => 5,
+        ]);
+});
+
+test('MergeTag from array', function (): void {
+    $tag = MergeTag::from([
+        'key' => 'test_key',
+        'required' => true,
+        'type' => 'string',
+        'children' => [
+            ['key' => 'child1', 'type' => 'integer'],
+        ],
+    ]);
+
+    expect($tag->key)->toBe('test_key')
+        ->and($tag->required)->toBeTrue()
+        ->and($tag->type)->toBe('string')
+        ->and($tag->children)->toHaveCount(1)
+        ->and($tag->children[0])->toBeInstanceOf(MergeTagChild::class)
+        ->and($tag->children[0]->key)->toBe('child1')
+        ->and($tag->children[0]->type)->toBe('integer');
+});
+
+test('MergeTag from array with minimal data', function (): void {
+    $tag = MergeTag::from([
+        'key' => 'simple_key',
+        'required' => false,
+    ]);
+
+    expect($tag->key)->toBe('simple_key')
+        ->and($tag->required)->toBeFalse()
+        ->and($tag->type)->toBeNull()
+        ->and($tag->children)->toBeNull();
 });
