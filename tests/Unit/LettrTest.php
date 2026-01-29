@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Lettr\Lettr;
 use Lettr\Services\DomainService;
 use Lettr\Services\EmailService;
+use Lettr\Services\TemplateService;
 use Lettr\Services\WebhookService;
 
 test('can create Lettr instance with client method', function (): void {
@@ -74,6 +75,27 @@ test('webhooks service is cached', function (): void {
     $webhooks2 = $lettr->webhooks();
 
     expect($webhooks1)->toBe($webhooks2);
+});
+
+test('can access templates service via method', function (): void {
+    $lettr = Lettr::client('test-api-key');
+
+    expect($lettr->templates())->toBeInstanceOf(TemplateService::class);
+});
+
+test('can access templates service via property', function (): void {
+    $lettr = Lettr::client('test-api-key');
+
+    expect($lettr->templates)->toBeInstanceOf(TemplateService::class);
+});
+
+test('templates service is cached', function (): void {
+    $lettr = Lettr::client('test-api-key');
+
+    $templates1 = $lettr->templates();
+    $templates2 = $lettr->templates();
+
+    expect($templates1)->toBe($templates2);
 });
 
 test('throws exception for unknown service', function (): void {

@@ -1,0 +1,292 @@
+<?php
+
+declare(strict_types=1);
+
+use Lettr\Collections\TemplateCollection;
+use Lettr\Contracts\TransporterContract;
+use Lettr\Dto\Template\ListTemplatesFilter;
+use Lettr\Dto\Template\Template;
+use Lettr\Dto\Template\TemplateDetail;
+use Lettr\Responses\ListTemplatesResponse;
+use Lettr\Services\TemplateService;
+
+/**
+ * Simple mock transporter for testing.
+ */
+class TemplatesMockTransporter implements TransporterContract
+{
+    public ?string $lastUri = null;
+
+    /** @var array<string, mixed>|null */
+    public ?array $lastData = null;
+
+    /** @var array<string, mixed>|null */
+    public ?array $lastQuery = null;
+
+    /** @var array<string, mixed> */
+    public array $response = [];
+
+    public function post(string $uri, array $data): array
+    {
+        $this->lastUri = $uri;
+        $this->lastData = $data;
+
+        return $this->response;
+    }
+
+    public function get(string $uri): array
+    {
+        $this->lastUri = $uri;
+
+        return $this->response;
+    }
+
+    public function getWithQuery(string $uri, array $query = []): array
+    {
+        $this->lastUri = $uri;
+        $this->lastQuery = $query;
+
+        return $this->response;
+    }
+
+    public function delete(string $uri): void
+    {
+        $this->lastUri = $uri;
+    }
+}
+
+test('can create TemplateService instance', function (): void {
+    $transporter = new TemplatesMockTransporter;
+    $service = new TemplateService($transporter);
+
+    expect($service)->toBeInstanceOf(TemplateService::class);
+});
+
+test('list method returns ListTemplatesResponse', function (): void {
+    $transporter = new TemplatesMockTransporter;
+    $transporter->response = [
+        'templates' => [
+            [
+                'id' => 1,
+                'name' => 'Welcome Email',
+                'slug' => 'welcome-email',
+                'project_id' => 123,
+                'folder_id' => null,
+                'created_at' => '2024-01-01T12:00:00+00:00',
+                'updated_at' => '2024-01-15T12:00:00+00:00',
+            ],
+            [
+                'id' => 2,
+                'name' => 'Newsletter',
+                'slug' => 'newsletter',
+                'project_id' => 123,
+                'folder_id' => 5,
+                'created_at' => '2024-01-02T12:00:00+00:00',
+                'updated_at' => '2024-01-16T12:00:00+00:00',
+            ],
+        ],
+        'pagination' => [
+            'current_page' => 1,
+            'last_page' => 1,
+            'per_page' => 15,
+            'total' => 2,
+        ],
+    ];
+
+    $service = new TemplateService($transporter);
+    $response = $service->list();
+
+    expect($transporter->lastUri)->toBe('templates')
+        ->and($transporter->lastQuery)->toBe([])
+        ->and($response)->toBeInstanceOf(ListTemplatesResponse::class)
+        ->and($response->templates)->toBeInstanceOf(TemplateCollection::class)
+        ->and($response->templates->count())->toBe(2)
+        ->and($response->pagination->total)->toBe(2)
+        ->and($response->hasMore())->toBeFalse();
+});
+
+test('list method with filter', function (): void {
+    $transporter = new TemplatesMockTransporter;
+    $transporter->response = [
+        'templates' => [],
+        'pagination' => [
+            'current_page' => 1,
+            'last_page' => 1,
+            'per_page' => 10,
+            'total' => 0,
+        ],
+    ];
+
+    $service = new TemplateService($transporter);
+    $filter = new ListTemplatesFilter(projectId: 456, perPage: 10, page: 2);
+    $service->list($filter);
+
+    expect($transporter->lastUri)->toBe('templates')
+        ->and($transporter->lastQuery)->toBe([
+            'project_id' => 456,
+            'per_page' => 10,
+            'page' => 2,
+        ]);
+});
+
+test('get method returns TemplateDetail', function (): void {
+    $transporter = new TemplatesMockTransporter;
+    $transporter->response = [
+        'id' => 1,
+        'name' => 'Welcome Email',
+        'slug' => 'welcome-email',
+        'project_id' => 123,
+        'folder_id' => null,
+        'active_version' => 3,
+        'versions_count' => 5,
+        'html' => '<html><body><h1>Welcome!</h1></body></html>',
+        'json' => ['tagName' => 'mj-body', 'children' => []],
+        'created_at' => '2024-01-01T12:00:00+00:00',
+        'updated_at' => '2024-01-15T12:00:00+00:00',
+    ];
+
+    $service = new TemplateService($transporter);
+    $template = $service->get('welcome-email');
+
+    expect($transporter->lastUri)->toBe('templates/welcome-email')
+        ->and($transporter->lastQuery)->toBe([])
+        ->and($template)->toBeInstanceOf(TemplateDetail::class)
+        ->and($template->id)->toBe(1)
+        ->and($template->name)->toBe('Welcome Email')
+        ->and($template->slug)->toBe('welcome-email')
+        ->and($template->projectId)->toBe(123)
+        ->and($template->folderId)->toBeNull()
+        ->and($template->activeVersion)->toBe(3)
+        ->and($template->versionsCount)->toBe(5)
+        ->and($template->html)->toBe('<html><body><h1>Welcome!</h1></body></html>')
+        ->and($template->json)->toBe(['tagName' => 'mj-body', 'children' => []]);
+});
+
+test('get method with project ID', function (): void {
+    $transporter = new TemplatesMockTransporter;
+    $transporter->response = [
+        'id' => 1,
+        'name' => 'Welcome Email',
+        'slug' => 'welcome-email',
+        'project_id' => 789,
+        'folder_id' => null,
+        'active_version' => 1,
+        'versions_count' => 1,
+        'html' => '<html><body>Hello</body></html>',
+        'json' => null,
+        'created_at' => '2024-01-01T12:00:00+00:00',
+        'updated_at' => '2024-01-15T12:00:00+00:00',
+    ];
+
+    $service = new TemplateService($transporter);
+    $service->get('welcome-email', projectId: 789);
+
+    expect($transporter->lastUri)->toBe('templates/welcome-email')
+        ->and($transporter->lastQuery)->toBe(['project_id' => 789]);
+});
+
+test('Template DTO from array', function (): void {
+    $template = Template::from([
+        'id' => 1,
+        'name' => 'Test Template',
+        'slug' => 'test-template',
+        'project_id' => 123,
+        'folder_id' => 5,
+        'created_at' => '2024-01-01T12:00:00+00:00',
+        'updated_at' => '2024-01-15T12:00:00+00:00',
+    ]);
+
+    expect($template->id)->toBe(1)
+        ->and($template->name)->toBe('Test Template')
+        ->and($template->slug)->toBe('test-template')
+        ->and($template->projectId)->toBe(123)
+        ->and($template->folderId)->toBe(5)
+        ->and($template->createdAt->toIso8601())->toBe('2024-01-01T12:00:00+00:00')
+        ->and($template->updatedAt->toIso8601())->toBe('2024-01-15T12:00:00+00:00');
+});
+
+test('ListTemplatesFilter fluent API', function (): void {
+    $filter = ListTemplatesFilter::create()
+        ->projectId(123)
+        ->perPage(20)
+        ->page(3);
+
+    expect($filter->projectId)->toBe(123)
+        ->and($filter->perPage)->toBe(20)
+        ->and($filter->page)->toBe(3)
+        ->and($filter->hasFilters())->toBeTrue()
+        ->and($filter->toArray())->toBe([
+            'project_id' => 123,
+            'per_page' => 20,
+            'page' => 3,
+        ]);
+});
+
+test('ListTemplatesFilter hasFilters returns false when empty', function (): void {
+    $filter = ListTemplatesFilter::create();
+
+    expect($filter->hasFilters())->toBeFalse()
+        ->and($filter->toArray())->toBe([]);
+});
+
+test('TemplateCollection methods', function (): void {
+    $templates = TemplateCollection::from([
+        Template::from([
+            'id' => 1,
+            'name' => 'Template 1',
+            'slug' => 'template-1',
+            'project_id' => 100,
+            'folder_id' => null,
+            'created_at' => '2024-01-01T12:00:00+00:00',
+            'updated_at' => '2024-01-01T12:00:00+00:00',
+        ]),
+        Template::from([
+            'id' => 2,
+            'name' => 'Template 2',
+            'slug' => 'template-2',
+            'project_id' => 200,
+            'folder_id' => 5,
+            'created_at' => '2024-01-02T12:00:00+00:00',
+            'updated_at' => '2024-01-02T12:00:00+00:00',
+        ]),
+    ]);
+
+    expect($templates->count())->toBe(2)
+        ->and($templates->isEmpty())->toBeFalse()
+        ->and($templates->first()->slug)->toBe('template-1')
+        ->and($templates->findBySlug('template-2')->id)->toBe(2)
+        ->and($templates->findBySlug('nonexistent'))->toBeNull()
+        ->and($templates->filterByProject(100)->count())->toBe(1)
+        ->and($templates->filterByFolder(5)->count())->toBe(1)
+        ->and($templates->filterByFolder(null)->count())->toBe(1);
+});
+
+test('TemplateCollection empty', function (): void {
+    $templates = TemplateCollection::empty();
+
+    expect($templates->count())->toBe(0)
+        ->and($templates->isEmpty())->toBeTrue()
+        ->and($templates->first())->toBeNull();
+});
+
+test('TemplatePagination has next and previous page', function (): void {
+    $transporter = new TemplatesMockTransporter;
+    $transporter->response = [
+        'templates' => [],
+        'pagination' => [
+            'current_page' => 2,
+            'last_page' => 5,
+            'per_page' => 10,
+            'total' => 45,
+        ],
+    ];
+
+    $service = new TemplateService($transporter);
+    $response = $service->list();
+
+    expect($response->hasMore())->toBeTrue()
+        ->and($response->pagination->hasNextPage())->toBeTrue()
+        ->and($response->pagination->hasPreviousPage())->toBeTrue()
+        ->and($response->pagination->nextPage())->toBe(3)
+        ->and($response->pagination->previousPage())->toBe(1);
+});

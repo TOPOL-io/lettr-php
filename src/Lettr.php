@@ -7,6 +7,7 @@ namespace Lettr;
 use Lettr\Contracts\TransporterContract;
 use Lettr\Services\DomainService;
 use Lettr\Services\EmailService;
+use Lettr\Services\TemplateService;
 use Lettr\Services\WebhookService;
 
 /**
@@ -15,6 +16,7 @@ use Lettr\Services\WebhookService;
  * @property-read EmailService $emails
  * @property-read DomainService $domains
  * @property-read WebhookService $webhooks
+ * @property-read TemplateService $templates
  */
 final class Lettr
 {
@@ -33,6 +35,8 @@ final class Lettr
     private ?DomainService $domainService = null;
 
     private ?WebhookService $webhookService = null;
+
+    private ?TemplateService $templateService = null;
 
     public function __construct(
         private readonly TransporterContract $client,
@@ -83,6 +87,18 @@ final class Lettr
     }
 
     /**
+     * Get the template service.
+     */
+    public function templates(): TemplateService
+    {
+        if ($this->templateService === null) {
+            $this->templateService = new TemplateService($this->client);
+        }
+
+        return $this->templateService;
+    }
+
+    /**
      * Magic method to access services as properties.
      */
     public function __get(string $name): mixed
@@ -91,6 +107,7 @@ final class Lettr
             'emails' => $this->emails(),
             'domains' => $this->domains(),
             'webhooks' => $this->webhooks(),
+            'templates' => $this->templates(),
             default => throw new \InvalidArgumentException("Unknown service: {$name}"),
         };
     }
