@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Lettr\Collections\TemplateCollection;
 use Lettr\Contracts\TransporterContract;
+use Lettr\Dto\Template\CreateTemplateData;
 use Lettr\Dto\Template\ListTemplatesFilter;
 use Lettr\Dto\Template\Template;
 use Lettr\Dto\Template\TemplateDetail;
@@ -289,4 +290,102 @@ test('TemplatePagination has next and previous page', function (): void {
         ->and($response->pagination->hasPreviousPage())->toBeTrue()
         ->and($response->pagination->nextPage())->toBe(3)
         ->and($response->pagination->previousPage())->toBe(1);
+});
+
+test('create method creates template and returns TemplateDetail', function (): void {
+    $transporter = new TemplatesMockTransporter;
+    $transporter->response = [
+        'id' => 10,
+        'name' => 'New Template',
+        'slug' => 'new-template',
+        'project_id' => 123,
+        'folder_id' => 5,
+        'active_version' => null,
+        'versions_count' => 0,
+        'html' => '<html><body>Hello</body></html>',
+        'json' => '{"blocks":[]}',
+        'created_at' => '2024-01-20T12:00:00+00:00',
+        'updated_at' => '2024-01-20T12:00:00+00:00',
+    ];
+
+    $service = new TemplateService($transporter);
+    $data = new CreateTemplateData(
+        name: 'New Template',
+        slug: 'new-template',
+        projectId: 123,
+        folderId: 5,
+        html: '<html><body>Hello</body></html>',
+        json: '{"blocks":[]}',
+    );
+    $template = $service->create($data);
+
+    expect($transporter->lastUri)->toBe('templates')
+        ->and($transporter->lastData)->toBe([
+            'name' => 'New Template',
+            'slug' => 'new-template',
+            'project_id' => 123,
+            'folder_id' => 5,
+            'html' => '<html><body>Hello</body></html>',
+            'json' => '{"blocks":[]}',
+        ])
+        ->and($template)->toBeInstanceOf(TemplateDetail::class)
+        ->and($template->id)->toBe(10)
+        ->and($template->name)->toBe('New Template')
+        ->and($template->slug)->toBe('new-template');
+});
+
+test('create method with minimal data', function (): void {
+    $transporter = new TemplatesMockTransporter;
+    $transporter->response = [
+        'id' => 11,
+        'name' => 'Minimal Template',
+        'slug' => 'minimal-template',
+        'project_id' => 1,
+        'folder_id' => null,
+        'active_version' => null,
+        'versions_count' => 0,
+        'html' => null,
+        'json' => null,
+        'created_at' => '2024-01-20T12:00:00+00:00',
+        'updated_at' => '2024-01-20T12:00:00+00:00',
+    ];
+
+    $service = new TemplateService($transporter);
+    $data = new CreateTemplateData(name: 'Minimal Template');
+    $template = $service->create($data);
+
+    expect($transporter->lastData)->toBe(['name' => 'Minimal Template'])
+        ->and($template->name)->toBe('Minimal Template')
+        ->and($template->html)->toBeNull()
+        ->and($template->json)->toBeNull();
+});
+
+test('delete method calls correct endpoint', function (): void {
+    $transporter = new TemplatesMockTransporter;
+    $service = new TemplateService($transporter);
+
+    $service->delete('my-template');
+
+    expect($transporter->lastUri)->toBe('templates/my-template');
+});
+
+test('delete method with project ID', function (): void {
+    $transporter = new TemplatesMockTransporter;
+    $service = new TemplateService($transporter);
+
+    $service->delete('my-template', projectId: 456);
+
+    expect($transporter->lastUri)->toBe('templates/my-template?project_id=456');
+});
+
+test('CreateTemplateData toArray only includes non-null values', function (): void {
+    $data = new CreateTemplateData(
+        name: 'Test',
+        projectId: 100,
+    );
+
+    expect($data->toArray())->toBe([
+        'name' => 'Test',
+        'project_id' => 100,
+    ]);
 });

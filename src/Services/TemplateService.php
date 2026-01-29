@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Lettr\Services;
 
 use Lettr\Contracts\TransporterContract;
+use Lettr\Dto\Template\CreateTemplateData;
 use Lettr\Dto\Template\ListTemplatesFilter;
 use Lettr\Dto\Template\TemplateDetail;
 use Lettr\Responses\ListTemplatesResponse;
@@ -74,5 +75,44 @@ final class TemplateService
         $response = $this->transporter->getWithQuery(self::TEMPLATES_ENDPOINT.'/'.$slug, $query);
 
         return TemplateDetail::from($response);
+    }
+
+    /**
+     * Create a new template.
+     */
+    public function create(CreateTemplateData $data): TemplateDetail
+    {
+        /**
+         * @var array{
+         *     id: int,
+         *     name: string,
+         *     slug: string,
+         *     project_id: int,
+         *     folder_id?: int|null,
+         *     active_version: int|null,
+         *     versions_count: int,
+         *     html: string|null,
+         *     json?: string|null,
+         *     created_at: string,
+         *     updated_at: string,
+         * } $response
+         */
+        $response = $this->transporter->post(self::TEMPLATES_ENDPOINT, $data->toArray());
+
+        return TemplateDetail::from($response);
+    }
+
+    /**
+     * Delete a template by slug.
+     */
+    public function delete(string $slug, ?int $projectId = null): void
+    {
+        $endpoint = self::TEMPLATES_ENDPOINT.'/'.$slug;
+
+        if ($projectId !== null) {
+            $endpoint .= '?project_id='.$projectId;
+        }
+
+        $this->transporter->delete($endpoint);
     }
 }
