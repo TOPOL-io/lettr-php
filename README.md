@@ -427,7 +427,17 @@ $template = $lettr->templates()->create(new CreateTemplateData(
 ));
 
 echo $template->id;
+echo $template->name;
 echo $template->slug;
+echo $template->projectId;
+echo $template->folderId;
+echo $template->activeVersion;
+
+// Merge tags extracted from the template
+foreach ($template->mergeTags as $tag) {
+    echo $tag->key;
+    echo $tag->required;
+}
 ```
 
 ### Delete a Template

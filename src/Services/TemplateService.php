@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Lettr\Services;
 
 use Lettr\Contracts\TransporterContract;
+use Lettr\Dto\Template\CreatedTemplate;
 use Lettr\Dto\Template\CreateTemplateData;
 use Lettr\Dto\Template\ListTemplatesFilter;
 use Lettr\Dto\Template\TemplateDetail;
@@ -81,7 +82,7 @@ final class TemplateService
     /**
      * Create a new template.
      */
-    public function create(CreateTemplateData $data): TemplateDetail
+    public function create(CreateTemplateData $data): CreatedTemplate
     {
         /**
          * @var array{
@@ -89,18 +90,15 @@ final class TemplateService
          *     name: string,
          *     slug: string,
          *     project_id: int,
-         *     folder_id?: int|null,
-         *     active_version?: int|null,
-         *     versions_count?: int,
-         *     html?: string|null,
-         *     json?: string|null,
+         *     folder_id: int,
+         *     active_version: int,
+         *     merge_tags: array<int, array{key: string, required: bool, children?: array<int, array{key: string, type?: string|null}>}>,
          *     created_at: string,
-         *     updated_at: string,
          * } $response
          */
         $response = $this->transporter->post(self::TEMPLATES_ENDPOINT, $data->toArray());
 
-        return TemplateDetail::from($response);
+        return CreatedTemplate::from($response);
     }
 
     /**

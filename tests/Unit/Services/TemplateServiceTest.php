@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Lettr\Collections\TemplateCollection;
 use Lettr\Contracts\TransporterContract;
+use Lettr\Dto\Template\CreatedTemplate;
 use Lettr\Dto\Template\CreateTemplateData;
 use Lettr\Dto\Template\ListTemplatesFilter;
 use Lettr\Dto\Template\MergeTag;
@@ -295,7 +296,7 @@ test('TemplatePagination has next and previous page', function (): void {
         ->and($response->pagination->previousPage())->toBe(1);
 });
 
-test('create method creates template and returns TemplateDetail', function (): void {
+test('create method creates template and returns CreatedTemplate', function (): void {
     $transporter = new TemplatesMockTransporter;
     $transporter->response = [
         'id' => 10,
@@ -303,12 +304,11 @@ test('create method creates template and returns TemplateDetail', function (): v
         'slug' => 'new-template',
         'project_id' => 123,
         'folder_id' => 5,
-        'active_version' => null,
-        'versions_count' => 0,
-        'html' => '<html><body>Hello</body></html>',
-        'json' => '{"blocks":[]}',
+        'active_version' => 1,
+        'merge_tags' => [
+            ['key' => 'user_name', 'required' => true],
+        ],
         'created_at' => '2024-01-20T12:00:00+00:00',
-        'updated_at' => '2024-01-20T12:00:00+00:00',
     ];
 
     $service = new TemplateService($transporter);
@@ -331,10 +331,13 @@ test('create method creates template and returns TemplateDetail', function (): v
             'html' => '<html><body>Hello</body></html>',
             'json' => '{"blocks":[]}',
         ])
-        ->and($template)->toBeInstanceOf(TemplateDetail::class)
+        ->and($template)->toBeInstanceOf(CreatedTemplate::class)
         ->and($template->id)->toBe(10)
         ->and($template->name)->toBe('New Template')
-        ->and($template->slug)->toBe('new-template');
+        ->and($template->slug)->toBe('new-template')
+        ->and($template->activeVersion)->toBe(1)
+        ->and($template->mergeTags)->toHaveCount(1)
+        ->and($template->mergeTags[0])->toBeInstanceOf(MergeTag::class);
 });
 
 test('create method with minimal data', function (): void {
@@ -344,13 +347,10 @@ test('create method with minimal data', function (): void {
         'name' => 'Minimal Template',
         'slug' => 'minimal-template',
         'project_id' => 1,
-        'folder_id' => null,
-        'active_version' => null,
-        'versions_count' => 0,
-        'html' => null,
-        'json' => null,
+        'folder_id' => 1,
+        'active_version' => 1,
+        'merge_tags' => [],
         'created_at' => '2024-01-20T12:00:00+00:00',
-        'updated_at' => '2024-01-20T12:00:00+00:00',
     ];
 
     $service = new TemplateService($transporter);
@@ -358,9 +358,10 @@ test('create method with minimal data', function (): void {
     $template = $service->create($data);
 
     expect($transporter->lastData)->toBe(['name' => 'Minimal Template'])
+        ->and($template)->toBeInstanceOf(CreatedTemplate::class)
         ->and($template->name)->toBe('Minimal Template')
-        ->and($template->html)->toBeNull()
-        ->and($template->json)->toBeNull();
+        ->and($template->slug)->toBe('minimal-template')
+        ->and($template->mergeTags)->toBeEmpty();
 });
 
 test('delete method calls correct endpoint', function (): void {
