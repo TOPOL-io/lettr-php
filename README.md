@@ -369,6 +369,109 @@ if ($webhook->listensTo(EventType::Bounce)) {
 }
 ```
 
+## Templates
+
+### List Templates
+
+```php
+use Lettr\Dto\Template\ListTemplatesFilter;
+
+// List all templates
+$response = $lettr->templates()->list();
+
+foreach ($response->templates as $template) {
+    echo $template->id;
+    echo $template->name;
+    echo $template->slug;
+    echo $template->projectId;
+}
+
+// With pagination
+$filter = ListTemplatesFilter::create()
+    ->projectId(123)
+    ->perPage(20)
+    ->page(2);
+
+$response = $lettr->templates()->list($filter);
+```
+
+### Get Template Details
+
+```php
+$template = $lettr->templates()->get('welcome-email');
+
+echo $template->id;
+echo $template->name;
+echo $template->slug;
+echo $template->html;
+echo $template->json;
+echo $template->activeVersion;
+echo $template->versionsCount;
+
+// With specific project
+$template = $lettr->templates()->get('welcome-email', projectId: 123);
+```
+
+### Create a Template
+
+```php
+use Lettr\Dto\Template\CreateTemplateData;
+
+$template = $lettr->templates()->create(new CreateTemplateData(
+    name: 'My Template',
+    slug: 'my-template',        // optional, auto-generated if not provided
+    projectId: 123,             // optional
+    folderId: 5,                // optional
+    html: '<html>...</html>',   // optional
+    json: '{"blocks":[]}',      // optional, TOPOL.io JSON format
+));
+
+echo $template->id;
+echo $template->slug;
+```
+
+### Delete a Template
+
+```php
+$lettr->templates()->delete('my-template');
+
+// With specific project
+$lettr->templates()->delete('my-template', projectId: 123);
+```
+
+### Get Merge Tags
+
+Retrieve merge tags (template variables) from a template:
+
+```php
+$response = $lettr->templates()->getMergeTags('welcome-email');
+
+echo $response->projectId;
+echo $response->templateSlug;
+echo $response->version;
+
+foreach ($response->mergeTags as $tag) {
+    echo $tag->key;       // e.g., 'user_name'
+    echo $tag->required;  // true/false
+    echo $tag->type;      // e.g., 'string', 'object'
+
+    // Nested tags (for objects)
+    if ($tag->children !== null) {
+        foreach ($tag->children as $child) {
+            echo $child->key;   // e.g., 'first_name'
+            echo $child->type;  // e.g., 'string'
+        }
+    }
+}
+
+// With specific project and version
+$response = $lettr->templates()->getMergeTags(
+    'welcome-email',
+    projectId: 123,
+    version: 2,
+);
+```
+
 ## Event Types
 
 The SDK provides an `EventType` enum with helper methods:
