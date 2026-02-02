@@ -43,8 +43,8 @@ final readonly class Domain
             domain: new DomainName($data['domain']),
             status: DomainStatus::from($data['status']),
             canSend: $data['can_send'],
-            dkimStatus: isset($data['dkim_status']) ? DnsStatus::from($data['dkim_status']) : DnsStatus::Pending,
-            returnPathStatus: isset($data['return_path_status']) ? DnsStatus::from($data['return_path_status']) : DnsStatus::Pending,
+            dkimStatus: isset($data['dkim_status']) ? DnsStatus::from($data['dkim_status']) : DnsStatus::Unverified,
+            returnPathStatus: isset($data['return_path_status']) ? DnsStatus::from($data['return_path_status']) : DnsStatus::Unverified,
             createdAt: Timestamp::fromString($data['created_at']),
             verifiedAt: isset($data['verified_at']) ? Timestamp::fromString($data['verified_at']) : null,
         );
