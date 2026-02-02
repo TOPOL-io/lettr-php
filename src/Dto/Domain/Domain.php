@@ -31,8 +31,8 @@ final readonly class Domain
      *     domain: string,
      *     status: string,
      *     can_send: bool,
-     *     dkim_status: string,
-     *     return_path_status: string,
+     *     dkim_status?: string,
+     *     return_path_status?: string,
      *     created_at: string,
      *     verified_at?: string|null,
      * }  $data
@@ -43,8 +43,8 @@ final readonly class Domain
             domain: new DomainName($data['domain']),
             status: DomainStatus::from($data['status']),
             canSend: $data['can_send'],
-            dkimStatus: DnsStatus::from($data['dkim_status']),
-            returnPathStatus: DnsStatus::from($data['return_path_status']),
+            dkimStatus: isset($data['dkim_status']) ? DnsStatus::from($data['dkim_status']) : DnsStatus::Pending,
+            returnPathStatus: isset($data['return_path_status']) ? DnsStatus::from($data['return_path_status']) : DnsStatus::Pending,
             createdAt: Timestamp::fromString($data['created_at']),
             verifiedAt: isset($data['verified_at']) ? Timestamp::fromString($data['verified_at']) : null,
         );
