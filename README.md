@@ -482,6 +482,16 @@ $response = $lettr->templates()->getMergeTags(
 );
 ```
 
+## Health Check
+
+```php
+$status = $lettr->health()->check();
+
+echo $status->status;     // 'ok'
+echo $status->timestamp;  // ISO 8601 timestamp
+echo $status->isHealthy(); // true/false
+```
+
 ## Event Types
 
 The SDK provides an `EventType` enum with helper methods:
