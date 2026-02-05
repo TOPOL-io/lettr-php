@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Lettr\Lettr;
 use Lettr\Services\DomainService;
 use Lettr\Services\EmailService;
+use Lettr\Services\ProjectService;
 use Lettr\Services\TemplateService;
 use Lettr\Services\WebhookService;
 
@@ -96,6 +97,27 @@ test('templates service is cached', function (): void {
     $templates2 = $lettr->templates();
 
     expect($templates1)->toBe($templates2);
+});
+
+test('can access projects service via method', function (): void {
+    $lettr = Lettr::client('test-api-key');
+
+    expect($lettr->projects())->toBeInstanceOf(ProjectService::class);
+});
+
+test('can access projects service via property', function (): void {
+    $lettr = Lettr::client('test-api-key');
+
+    expect($lettr->projects)->toBeInstanceOf(ProjectService::class);
+});
+
+test('projects service is cached', function (): void {
+    $lettr = Lettr::client('test-api-key');
+
+    $projects1 = $lettr->projects();
+    $projects2 = $lettr->projects();
+
+    expect($projects1)->toBe($projects2);
 });
 
 test('throws exception for unknown service', function (): void {

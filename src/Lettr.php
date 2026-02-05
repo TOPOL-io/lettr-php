@@ -8,6 +8,7 @@ use Lettr\Contracts\TransporterContract;
 use Lettr\Services\DomainService;
 use Lettr\Services\EmailService;
 use Lettr\Services\HealthService;
+use Lettr\Services\ProjectService;
 use Lettr\Services\TemplateService;
 use Lettr\Services\WebhookService;
 
@@ -18,6 +19,7 @@ use Lettr\Services\WebhookService;
  * @property-read DomainService $domains
  * @property-read WebhookService $webhooks
  * @property-read TemplateService $templates
+ * @property-read ProjectService $projects
  * @property-read HealthService $health
  */
 final class Lettr
@@ -39,6 +41,8 @@ final class Lettr
     private ?WebhookService $webhookService = null;
 
     private ?TemplateService $templateService = null;
+
+    private ?ProjectService $projectService = null;
 
     private ?HealthService $healthService = null;
 
@@ -103,6 +107,18 @@ final class Lettr
     }
 
     /**
+     * Get the project service.
+     */
+    public function projects(): ProjectService
+    {
+        if ($this->projectService === null) {
+            $this->projectService = new ProjectService($this->client);
+        }
+
+        return $this->projectService;
+    }
+
+    /**
      * Get the health service.
      */
     public function health(): HealthService
@@ -124,6 +140,7 @@ final class Lettr
             'domains' => $this->domains(),
             'webhooks' => $this->webhooks(),
             'templates' => $this->templates(),
+            'projects' => $this->projects(),
             'health' => $this->health(),
             default => throw new \InvalidArgumentException("Unknown service: {$name}"),
         };
