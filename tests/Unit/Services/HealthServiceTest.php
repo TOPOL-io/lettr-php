@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Lettr\Contracts\TransporterContract;
+use Lettr\Dto\AuthStatus;
 use Lettr\Dto\HealthStatus;
 use Lettr\Services\HealthService;
 
@@ -66,4 +67,29 @@ test('isHealthy returns false for non-ok status', function (): void {
     ]);
 
     expect($status->isHealthy())->toBeFalse();
+});
+
+test('authCheck method returns AuthStatus', function (): void {
+    $transporter = new HealthMockTransporter;
+    $transporter->response = [
+        'team_id' => 123,
+        'timestamp' => '2024-01-20T12:00:00+00:00',
+    ];
+
+    $service = new HealthService($transporter);
+    $status = $service->authCheck();
+
+    expect($transporter->lastUri)->toBe('auth/check')
+        ->and($status)->toBeInstanceOf(AuthStatus::class)
+        ->and($status->teamId)->toBe(123);
+});
+
+test('AuthStatus from array', function (): void {
+    $status = AuthStatus::from([
+        'team_id' => 456,
+        'timestamp' => '2024-01-20T15:30:00+00:00',
+    ]);
+
+    expect($status->teamId)->toBe(456)
+        ->and($status->timestamp->toIso8601())->toBe('2024-01-20T15:30:00+00:00');
 });

@@ -485,11 +485,18 @@ $response = $lettr->templates()->getMergeTags(
 ## Health Check
 
 ```php
+// Check API health (no authentication required)
 $status = $lettr->health()->check();
 
-echo $status->status;     // 'ok'
-echo $status->timestamp;  // ISO 8601 timestamp
+echo $status->status;      // 'ok'
+echo $status->timestamp;   // Timestamp object
 echo $status->isHealthy(); // true/false
+
+// Verify API key is valid and get team info
+$auth = $lettr->health()->authCheck();
+
+echo $auth->teamId;    // Your team ID
+echo $auth->timestamp; // Timestamp object
 ```
 
 ## Event Types
