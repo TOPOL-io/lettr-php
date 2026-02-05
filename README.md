@@ -482,6 +482,62 @@ $response = $lettr->templates()->getMergeTags(
 );
 ```
 
+## Projects
+
+### List Projects
+
+```php
+use Lettr\Dto\Project\ListProjectsFilter;
+
+// List all projects
+$response = $lettr->projects()->list();
+
+foreach ($response->projects as $project) {
+    echo $project->id;
+    echo $project->name;
+    echo $project->emoji;
+    echo $project->teamId;
+    echo $project->createdAt;
+    echo $project->updatedAt;
+}
+
+// With pagination
+$filter = ListProjectsFilter::create()
+    ->perPage(20)
+    ->page(2);
+
+$response = $lettr->projects()->list($filter);
+
+// Navigate through pages
+if ($response->hasMore()) {
+    $nextPage = $response->pagination->nextPage();
+    $nextFilter = $filter->page($nextPage);
+    $nextResponse = $lettr->projects()->list($nextFilter);
+}
+```
+
+### Working with Project Collections
+
+```php
+$response = $lettr->projects()->list();
+
+// Collection methods
+echo $response->projects->count();      // Number of projects
+echo $response->projects->isEmpty();    // Check if empty
+$first = $response->projects->first();  // Get first project
+
+// Find by ID
+$project = $response->projects->findById(46);
+
+// Find by name
+$project = $response->projects->findByName('wefwef');
+
+// Iterate through projects
+foreach ($response->projects as $project) {
+    echo "{$project->emoji} {$project->name}";
+}
+```
+
 ## Health Check
 
 ```php
