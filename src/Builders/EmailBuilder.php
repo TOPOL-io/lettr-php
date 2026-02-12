@@ -12,9 +12,9 @@ use Lettr\Dto\Email\Metadata;
 use Lettr\Dto\Email\SendEmailData;
 use Lettr\Dto\Email\SubstitutionData;
 use Lettr\Exceptions\InvalidValueException;
-use Lettr\ValueObjects\Tag;
 use Lettr\ValueObjects\EmailAddress;
 use Lettr\ValueObjects\Subject;
+use Lettr\ValueObjects\Tag;
 
 /**
  * Fluent builder for creating email send data.

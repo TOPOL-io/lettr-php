@@ -7,9 +7,9 @@ namespace Lettr\Dto\Email;
 use Lettr\Collections\AttachmentCollection;
 use Lettr\Collections\EmailAddressCollection;
 use Lettr\Contracts\Arrayable;
-use Lettr\ValueObjects\Tag;
 use Lettr\ValueObjects\EmailAddress;
 use Lettr\ValueObjects\Subject;
+use Lettr\ValueObjects\Tag;
 
 /**
  * Data Transfer Object for sending an email.
