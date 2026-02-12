@@ -29,7 +29,7 @@ final readonly class GetEmailResponse
      *         recipient: string,
      *         from: string,
      *         subject: string,
-     *         campaign_id?: string|null,
+     *         tag?: string|null,
      *         ip_address?: string|null,
      *         user_agent?: string|null,
      *         click_url?: string|null,

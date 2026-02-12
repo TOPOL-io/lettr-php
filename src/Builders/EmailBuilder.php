@@ -12,7 +12,7 @@ use Lettr\Dto\Email\Metadata;
 use Lettr\Dto\Email\SendEmailData;
 use Lettr\Dto\Email\SubstitutionData;
 use Lettr\Exceptions\InvalidValueException;
-use Lettr\ValueObjects\CampaignId;
+use Lettr\ValueObjects\Tag;
 use Lettr\ValueObjects\EmailAddress;
 use Lettr\ValueObjects\Subject;
 
@@ -53,7 +53,7 @@ final class EmailBuilder
 
     private ?SubstitutionData $substitutionData = null;
 
-    private ?CampaignId $campaignId = null;
+    private ?Tag $tag = null;
 
     private ?int $projectId = null;
 
@@ -314,11 +314,11 @@ final class EmailBuilder
     }
 
     /**
-     * Set the campaign ID.
+     * Set the tag.
      */
-    public function campaignId(string|CampaignId $id): self
+    public function tag(string|Tag $tag): self
     {
-        $this->campaignId = $id instanceof CampaignId ? $id : new CampaignId($id);
+        $this->tag = $tag instanceof Tag ? $tag : new Tag($tag);
 
         return $this;
     }
@@ -416,7 +416,7 @@ final class EmailBuilder
             options: $options,
             metadata: $this->metadata,
             substitutionData: $this->substitutionData,
-            campaignId: $this->campaignId,
+            tag: $this->tag,
             projectId: $this->projectId,
             templateSlug: $this->templateSlug,
             templateVersion: $this->templateVersion,

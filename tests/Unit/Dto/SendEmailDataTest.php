@@ -35,7 +35,7 @@ test('can create SendEmailData with all fields', function (): void {
         'cc' => ['cc@example.com'],
         'bcc' => ['bcc@example.com'],
         'reply_to' => 'reply@example.com',
-        'campaign_id' => 'campaign_123',
+        'tag' => 'campaign_123',
     ]);
 
     expect($data->from->address)->toBe('sender@example.com')
@@ -47,7 +47,7 @@ test('can create SendEmailData with all fields', function (): void {
         ->and($data->cc?->toStrings())->toBe(['cc@example.com'])
         ->and($data->bcc?->toStrings())->toBe(['bcc@example.com'])
         ->and($data->replyTo?->address)->toBe('reply@example.com')
-        ->and((string) $data->campaignId)->toBe('campaign_123');
+        ->and((string) $data->tag)->toBe('campaign_123');
 });
 
 test('toArray returns correct structure with required fields only', function (): void {
@@ -97,5 +97,5 @@ test('toArray excludes null optional fields', function (): void {
         ->and($array)->not->toHaveKey('attachments')
         ->and($array)->not->toHaveKey('metadata')
         ->and($array)->not->toHaveKey('substitution_data')
-        ->and($array)->not->toHaveKey('campaign_id');
+        ->and($array)->not->toHaveKey('tag');
 });

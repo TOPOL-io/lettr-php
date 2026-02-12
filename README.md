@@ -61,7 +61,7 @@ $response = $lettr->emails()->send(
         ->withOpenTracking(true)
         ->metadata(['user_id' => '123', 'campaign' => 'welcome'])
         ->substitutionData(['name' => 'John', 'company' => 'Acme'])
-        ->campaignId('welcome-series')
+        ->tag('welcome')
 );
 ```
 

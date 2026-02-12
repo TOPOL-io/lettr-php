@@ -7,7 +7,7 @@ namespace Lettr\Dto\Email;
 use Lettr\Collections\AttachmentCollection;
 use Lettr\Collections\EmailAddressCollection;
 use Lettr\Contracts\Arrayable;
-use Lettr\ValueObjects\CampaignId;
+use Lettr\ValueObjects\Tag;
 use Lettr\ValueObjects\EmailAddress;
 use Lettr\ValueObjects\Subject;
 
@@ -29,7 +29,7 @@ final readonly class SendEmailData implements Arrayable
         public ?EmailOptions $options = null,
         public ?Metadata $metadata = null,
         public ?SubstitutionData $substitutionData = null,
-        public ?CampaignId $campaignId = null,
+        public ?Tag $tag = null,
         public ?int $projectId = null,
         public ?string $templateSlug = null,
         public ?int $templateVersion = null,
@@ -51,7 +51,7 @@ final readonly class SendEmailData implements Arrayable
      *     options?: array{click_tracking?: bool, open_tracking?: bool, transactional?: bool, inline_css?: bool, perform_substitutions?: bool}|null,
      *     metadata?: array<string, string>|null,
      *     substitution_data?: array<string, mixed>|null,
-     *     campaign_id?: string|null,
+     *     tag?: string|null,
      *     project_id?: int|null,
      *     template_slug?: string|null,
      *     template_version?: int|null,
@@ -78,7 +78,7 @@ final readonly class SendEmailData implements Arrayable
             options: isset($data['options']) ? EmailOptions::from($data['options']) : null,
             metadata: isset($data['metadata']) ? Metadata::from($data['metadata']) : null,
             substitutionData: isset($data['substitution_data']) ? SubstitutionData::from($data['substitution_data']) : null,
-            campaignId: isset($data['campaign_id']) ? new CampaignId($data['campaign_id']) : null,
+            tag: isset($data['tag']) ? new Tag($data['tag']) : null,
             projectId: $data['project_id'] ?? null,
             templateSlug: $data['template_slug'] ?? null,
             templateVersion: $data['template_version'] ?? null,
@@ -138,8 +138,8 @@ final readonly class SendEmailData implements Arrayable
             $data['substitution_data'] = $this->substitutionData->toArray();
         }
 
-        if ($this->campaignId !== null) {
-            $data['campaign_id'] = (string) $this->campaignId;
+        if ($this->tag !== null) {
+            $data['tag'] = (string) $this->tag;
         }
 
         if ($this->projectId !== null) {
