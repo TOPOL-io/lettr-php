@@ -15,6 +15,7 @@ use Lettr\Exceptions\ApiException;
 use Lettr\Exceptions\QuotaExceededException;
 use Lettr\Exceptions\RateLimitException;
 use Lettr\Exceptions\TransporterException;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * HTTP Client for Lettr API.
@@ -176,7 +177,7 @@ final class Client implements TransporterContract
      *
      * @return array<string, string|string[]>
      */
-    private function extractHeaders(\Psr\Http\Message\ResponseInterface $response): array
+    private function extractHeaders(ResponseInterface $response): array
     {
         $headers = [];
         foreach ($response->getHeaders() as $name => $values) {
