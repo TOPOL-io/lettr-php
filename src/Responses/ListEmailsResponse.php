@@ -48,7 +48,7 @@ final readonly class ListEmailsResponse
             events: EmailEventCollection::from(
                 array_map(
                     static fn (array $event): EmailEvent => EmailEvent::from($event),
-                    $data['events']
+                    $data['results']
                 )
             ),
             totalCount: $data['total_count'],
