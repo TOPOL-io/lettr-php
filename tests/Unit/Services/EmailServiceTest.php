@@ -10,6 +10,7 @@ use Lettr\Dto\SendingQuota;
 use Lettr\Responses\GetEmailResponse;
 use Lettr\Responses\ListEmailsResponse;
 use Lettr\Services\EmailService;
+use Lettr\ValueObjects\EmailAddress;
 
 /**
  * Simple mock transporter for testing.
@@ -192,13 +193,13 @@ test('sendHtml helper sends HTML email', function (): void {
         ->and((string) $response->requestId)->toBe('req_html');
 });
 
-test('sendHtml helper with from name', function (): void {
+test('sendHtml helper with from name using EmailAddress', function (): void {
     $transporter = new MockTransporter;
     $transporter->response = ['request_id' => 'req_html2', 'accepted' => 1, 'rejected' => 0];
 
     $service = new EmailService($transporter);
     $service->sendHtml(
-        from: ['email' => 'sender@example.com', 'name' => 'Sender Name'],
+        from: new EmailAddress('sender@example.com', 'Sender Name'),
         to: ['recipient@example.com'],
         subject: 'HTML Test',
         html: '<h1>Hello</h1>',

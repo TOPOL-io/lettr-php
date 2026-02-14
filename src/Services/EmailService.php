@@ -11,6 +11,7 @@ use Lettr\Dto\Email\SendEmailData;
 use Lettr\Dto\Email\SendEmailResponse;
 use Lettr\Responses\GetEmailResponse;
 use Lettr\Responses\ListEmailsResponse;
+use Lettr\ValueObjects\EmailAddress;
 use Lettr\ValueObjects\RequestId;
 
 /**
@@ -48,27 +49,23 @@ final class EmailService
     /**
      * Send an HTML email.
      *
-     * @param  string|array{email: string, name?: string}  $from
      * @param  array<string>|string  $to
      * @param  array<string, mixed>|null  $substitutionData
      */
     public function sendHtml(
-        string|array $from,
+        string|EmailAddress $from,
         array|string $to,
         string $subject,
         string $html,
         ?array $substitutionData = null,
     ): SendEmailResponse {
+        $from = EmailAddress::from($from);
+
         $builder = $this->create()
+            ->from($from->address, $from->name)
             ->to(is_array($to) ? $to : [$to])
             ->subject($subject)
             ->html($html);
-
-        if (is_array($from)) {
-            $builder->from($from['email'], $from['name'] ?? null);
-        } else {
-            $builder->from($from);
-        }
 
         if ($substitutionData !== null) {
             $builder->substitutionData($substitutionData);
@@ -80,27 +77,23 @@ final class EmailService
     /**
      * Send a plain text email.
      *
-     * @param  string|array{email: string, name?: string}  $from
      * @param  array<string>|string  $to
      * @param  array<string, mixed>|null  $substitutionData
      */
     public function sendText(
-        string|array $from,
+        string|EmailAddress $from,
         array|string $to,
         string $subject,
         string $text,
         ?array $substitutionData = null,
     ): SendEmailResponse {
+        $from = EmailAddress::from($from);
+
         $builder = $this->create()
+            ->from($from->address, $from->name)
             ->to(is_array($to) ? $to : [$to])
             ->subject($subject)
             ->text($text);
-
-        if (is_array($from)) {
-            $builder->from($from['email'], $from['name'] ?? null);
-        } else {
-            $builder->from($from);
-        }
 
         if ($substitutionData !== null) {
             $builder->substitutionData($substitutionData);
@@ -112,12 +105,11 @@ final class EmailService
     /**
      * Send an email using a template.
      *
-     * @param  string|array{email: string, name?: string}  $from
      * @param  array<string>|string  $to
      * @param  array<string, mixed>|null  $substitutionData
      */
     public function sendTemplate(
-        string|array $from,
+        string|EmailAddress $from,
         array|string $to,
         string $subject,
         string $templateSlug,
@@ -125,16 +117,13 @@ final class EmailService
         ?int $projectId = null,
         ?array $substitutionData = null,
     ): SendEmailResponse {
+        $from = EmailAddress::from($from);
+
         $builder = $this->create()
+            ->from($from->address, $from->name)
             ->to(is_array($to) ? $to : [$to])
             ->subject($subject)
             ->useTemplate($templateSlug, $templateVersion, $projectId);
-
-        if (is_array($from)) {
-            $builder->from($from['email'], $from['name'] ?? null);
-        } else {
-            $builder->from($from);
-        }
 
         if ($substitutionData !== null) {
             $builder->substitutionData($substitutionData);
