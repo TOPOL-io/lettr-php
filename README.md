@@ -541,38 +541,6 @@ echo $auth->teamId;    // Your team ID
 echo $auth->timestamp; // Timestamp object
 ```
 
-## Event Types
-
-The SDK provides an `EventType` enum with helper methods:
-
-```php
-use Lettr\Enums\EventType;
-
-$type = EventType::Delivery;
-
-$type->label();        // "Delivery"
-$type->isSuccess();    // true (injection, delivery)
-$type->isFailure();    // false (bounce, policy_rejection, etc.)
-$type->isEngagement(); // false (open, initial_open, click)
-$type->isUnsubscribe(); // false (list_unsubscribe, link_unsubscribe)
-```
-
-Available event types:
-- `injection` - Email accepted for delivery
-- `delivery` - Email delivered to recipient
-- `bounce` - Email bounced
-- `delay` - Delivery delayed
-- `policy_rejection` - Rejected by policy
-- `out_of_band` - Out of band bounce
-- `open` - Email opened
-- `initial_open` - First open
-- `click` - Link clicked
-- `generation_failure` - Template generation failed
-- `generation_rejection` - Template generation rejected
-- `spam_complaint` - Marked as spam
-- `list_unsubscribe` - Unsubscribed via list header
-- `link_unsubscribe` - Unsubscribed via link
-
 ## Value Objects
 
 The SDK uses value objects for type safety and validation:
