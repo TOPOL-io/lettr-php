@@ -13,6 +13,7 @@ final readonly class DomainDkim
         public string $selector,
         public string $publicKey,
         public string $headers,
+        public ?string $signingDomain = null,
     ) {}
 
     /**
@@ -23,16 +24,18 @@ final readonly class DomainDkim
      *     public_key?: string,
      *     public?: string,
      *     headers: string,
+     *     signing_domain?: string,
      * }  $data
      */
     public static function from(array $data): self
     {
-        $publicKey = $data['public_key'] ?? $data['public'] ?? null;
+        $publicKey = $data['public_key'] ?? $data['public'] ?? '';
 
         return new self(
             selector: $data['selector'],
-            publicKey: $publicKey ?? '',
+            publicKey: $publicKey,
             headers: $data['headers'],
+            signingDomain: $data['signing_domain'] ?? null,
         );
     }
 

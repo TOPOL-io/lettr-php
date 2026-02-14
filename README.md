@@ -226,16 +226,16 @@ $result = $lettr->domains()->create('example.com');
 // or
 $result = $lettr->domains()->create(new DomainName('example.com'));
 
-echo $result->domain;
-echo $result->status;
+echo $result->domain;       // example.com
+echo $result->status;       // DomainStatus::Pending
+echo $result->statusLabel;  // "Pending Review"
 
-// DNS records to configure
-echo $result->dns->returnPathHost;   // Return path CNAME host
-echo $result->dns->returnPathValue;  // Return path CNAME value
-
-if ($result->dns->dkim !== null) {
-    echo $result->dns->dkim->selector;   // DKIM selector
-    echo $result->dns->dkim->publicKey;  // DKIM public key
+// DKIM configuration
+if ($result->dkim !== null) {
+    echo $result->dkim->selector;      // DKIM selector (e.g. "scph0226")
+    echo $result->dkim->publicKey;     // DKIM public key
+    echo $result->dkim->headers;       // Signed headers (e.g. "from:to:subject:date")
+    echo $result->dkim->signingDomain; // Signing domain
 }
 ```
 

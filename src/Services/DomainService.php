@@ -67,14 +67,8 @@ final class DomainService
          * @var array{
          *     domain: string,
          *     status: string,
-         *     created_at: string,
-         *     dkim_status: string,
-         *     return_path_status: string,
-         *     dns: array{
-         *         return_path_host: string,
-         *         return_path_value: string,
-         *         dkim?: array{selector: string, public_key: string, headers: string}|null,
-         *     },
+         *     status_label: string,
+         *     dkim?: array{public: string, selector: string, headers: string, signing_domain: string}|null,
          * } $response
          */
         $response = $this->transporter->post(self::DOMAINS_ENDPOINT, $data->toArray());
