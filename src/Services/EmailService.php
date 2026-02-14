@@ -6,13 +6,9 @@ namespace Lettr\Services;
 
 use Lettr\Builders\EmailBuilder;
 use Lettr\Contracts\TransporterContract;
-use Lettr\Dto\Email\ListEmailsFilter;
 use Lettr\Dto\Email\SendEmailData;
 use Lettr\Dto\Email\SendEmailResponse;
-use Lettr\Responses\GetEmailResponse;
-use Lettr\Responses\ListEmailsResponse;
 use Lettr\ValueObjects\EmailAddress;
-use Lettr\ValueObjects\RequestId;
 
 /**
  * Service for sending and managing emails via the Lettr API.
@@ -130,72 +126,5 @@ final class EmailService
         }
 
         return $this->send($builder);
-    }
-
-    /**
-     * List email events with optional filtering.
-     */
-    public function list(?ListEmailsFilter $filter = null): ListEmailsResponse
-    {
-        $query = $filter?->toArray() ?? [];
-
-        /**
-         * @var array{
-         *     events: array<int, array{
-         *         request_id: string,
-         *         message_id: string,
-         *         type: string,
-         *         timestamp: string,
-         *         recipient: string,
-         *         from: string,
-         *         subject: string,
-         *         tag?: string|null,
-         *         ip_address?: string|null,
-         *         user_agent?: string|null,
-         *         click_url?: string|null,
-         *         bounce_class?: string|null,
-         *         reason?: string|null,
-         *         error_code?: string|null,
-         *     }>,
-         *     total_count: int,
-         *     pagination: array{next_cursor?: string|null, per_page: int},
-         * } $response
-         */
-        $response = $this->transporter->getWithQuery(self::EMAILS_ENDPOINT, $query);
-
-        return ListEmailsResponse::from($response);
-    }
-
-    /**
-     * Get email events by request ID.
-     */
-    public function get(string|RequestId $requestId): GetEmailResponse
-    {
-        $id = $requestId instanceof RequestId ? (string) $requestId : $requestId;
-
-        /**
-         * @var array{
-         *     events: array<int, array{
-         *         request_id: string,
-         *         message_id: string,
-         *         type: string,
-         *         timestamp: string,
-         *         recipient: string,
-         *         from: string,
-         *         subject: string,
-         *         tag?: string|null,
-         *         ip_address?: string|null,
-         *         user_agent?: string|null,
-         *         click_url?: string|null,
-         *         bounce_class?: string|null,
-         *         reason?: string|null,
-         *         error_code?: string|null,
-         *     }>,
-         *     total_count: int,
-         * } $response
-         */
-        $response = $this->transporter->get(self::EMAILS_ENDPOINT.'/'.$id);
-
-        return GetEmailResponse::from($response);
     }
 }

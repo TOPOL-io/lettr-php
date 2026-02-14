@@ -7,8 +7,6 @@ use Lettr\Contracts\TransporterContract;
 use Lettr\Dto\Email\SendEmailData;
 use Lettr\Dto\Email\SendEmailResponse;
 use Lettr\Dto\SendingQuota;
-use Lettr\Responses\GetEmailResponse;
-use Lettr\Responses\ListEmailsResponse;
 use Lettr\Services\EmailService;
 use Lettr\ValueObjects\EmailAddress;
 
@@ -120,57 +118,6 @@ test('send method works with EmailBuilder', function (): void {
     expect($transporter->lastUri)->toBe('emails')
         ->and($response)->toBeInstanceOf(SendEmailResponse::class)
         ->and((string) $response->requestId)->toBe('req_456');
-});
-
-test('list method returns ListEmailsResponse', function (): void {
-    $transporter = new MockTransporter;
-    $transporter->response = [
-        'events' => [
-            [
-                'request_id' => 'req_123',
-                'message_id' => 'msg_123',
-                'type' => 'delivery',
-                'timestamp' => '2024-01-01T12:00:00+00:00',
-                'recipient' => 'test@example.com',
-                'from' => 'sender@example.com',
-                'subject' => 'Test',
-            ],
-        ],
-        'total_count' => 1,
-        'pagination' => ['per_page' => 10],
-    ];
-
-    $service = new EmailService($transporter);
-    $response = $service->list();
-
-    expect($transporter->lastUri)->toBe('emails')
-        ->and($response)->toBeInstanceOf(ListEmailsResponse::class)
-        ->and($response->totalCount)->toBe(1);
-});
-
-test('get method returns GetEmailResponse', function (): void {
-    $transporter = new MockTransporter;
-    $transporter->response = [
-        'events' => [
-            [
-                'request_id' => 'req_123',
-                'message_id' => 'msg_123',
-                'type' => 'delivery',
-                'timestamp' => '2024-01-01T12:00:00+00:00',
-                'recipient' => 'test@example.com',
-                'from' => 'sender@example.com',
-                'subject' => 'Test',
-            ],
-        ],
-        'total_count' => 1,
-    ];
-
-    $service = new EmailService($transporter);
-    $response = $service->get('req_123');
-
-    expect($transporter->lastUri)->toBe('emails/req_123')
-        ->and($response)->toBeInstanceOf(GetEmailResponse::class)
-        ->and($response->totalCount)->toBe(1);
 });
 
 test('sendHtml helper sends HTML email', function (): void {
