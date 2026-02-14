@@ -12,6 +12,8 @@ enum DnsStatus: string
     case Valid = 'valid';
     case Unverified = 'unverified';
     case Invalid = 'invalid';
+    case Missing = 'missing';
+    case NotApplicable = 'not_applicable';
 
     /**
      * Get a human-readable label.
@@ -22,6 +24,8 @@ enum DnsStatus: string
             self::Valid => 'Valid',
             self::Unverified => 'Unverified',
             self::Invalid => 'Invalid',
+            self::Missing => 'Missing',
+            self::NotApplicable => 'Not Applicable',
         };
     }
 

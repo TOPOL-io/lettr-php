@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Lettr\Dto\Domain;
 
-use Lettr\Enums\DomainStatus;
+use Lettr\Enums\DnsStatus;
 use Lettr\ValueObjects\DomainName;
 
 /**
@@ -14,10 +14,19 @@ final readonly class DomainVerification
 {
     public function __construct(
         public DomainName $domain,
-        public DomainStatus $status,
-        public bool $canSend,
-        public DomainDnsVerification $dkim,
-        public DomainDnsVerification $returnPath,
+        public DnsStatus $dkimStatus,
+        public DnsStatus $cnameStatus,
+        public DnsStatus $dmarcStatus,
+        public DnsStatus $spfStatus,
+        public ?bool $ownershipVerified,
+        public bool $isPrimaryDomain,
+        public int $dkimWarningLevel,
+        public int $cnameWarningLevel,
+        public int $dmarcWarningLevel,
+        public int $spfWarningLevel,
+        public ?VerificationDns $dns,
+        public ?DmarcVerification $dmarc,
+        public ?SpfVerification $spf,
     ) {}
 
     /**
@@ -25,20 +34,62 @@ final readonly class DomainVerification
      *
      * @param  array{
      *     domain: string,
-     *     status: string,
-     *     can_send: bool,
-     *     dkim: array{status: string, error?: string|null, expected?: string|null, found?: string|null},
-     *     return_path: array{status: string, error?: string|null, expected?: string|null, found?: string|null},
+     *     dkim_status: string,
+     *     cname_status: string,
+     *     dmarc_status: string,
+     *     spf_status: string,
+     *     ownership_verified: bool|null,
+     *     is_primary_domain: bool,
+     *     dkim_warning_level: int,
+     *     cname_warning_level: int,
+     *     dmarc_warning_level: int,
+     *     spf_warning_level: int,
+     *     dns?: array{
+     *         dkim_record?: string|null,
+     *         cname_record?: string|null,
+     *         dmarc_record?: string|null,
+     *         spf_record?: string|null,
+     *         dkim_error?: string|null,
+     *         cname_error?: string|null,
+     *         dmarc_error?: string|null,
+     *         spf_error?: string|null,
+     *     }|null,
+     *     dmarc?: array{
+     *         is_valid: bool,
+     *         status: string,
+     *         found_at_domain?: string|null,
+     *         record?: string|null,
+     *         policy?: string|null,
+     *         subdomain_policy?: string|null,
+     *         error?: string|null,
+     *         covered_by_parent_policy: bool,
+     *     }|null,
+     *     spf?: array{
+     *         is_valid: bool,
+     *         status: string,
+     *         record?: string|null,
+     *         error?: string|null,
+     *         includes_sparkpost: bool,
+     *     }|null,
      * }  $data
      */
     public static function from(array $data): self
     {
         return new self(
             domain: new DomainName($data['domain']),
-            status: DomainStatus::from($data['status']),
-            canSend: $data['can_send'],
-            dkim: DomainDnsVerification::from($data['dkim']),
-            returnPath: DomainDnsVerification::from($data['return_path']),
+            dkimStatus: DnsStatus::from($data['dkim_status']),
+            cnameStatus: DnsStatus::from($data['cname_status']),
+            dmarcStatus: DnsStatus::from($data['dmarc_status']),
+            spfStatus: DnsStatus::from($data['spf_status']),
+            ownershipVerified: $data['ownership_verified'],
+            isPrimaryDomain: $data['is_primary_domain'],
+            dkimWarningLevel: $data['dkim_warning_level'],
+            cnameWarningLevel: $data['cname_warning_level'],
+            dmarcWarningLevel: $data['dmarc_warning_level'],
+            spfWarningLevel: $data['spf_warning_level'],
+            dns: isset($data['dns']) ? VerificationDns::from($data['dns']) : null,
+            dmarc: isset($data['dmarc']) ? DmarcVerification::from($data['dmarc']) : null,
+            spf: isset($data['spf']) ? SpfVerification::from($data['spf']) : null,
         );
     }
 
@@ -47,7 +98,10 @@ final readonly class DomainVerification
      */
     public function isFullyVerified(): bool
     {
-        return $this->dkim->isValid() && $this->returnPath->isValid();
+        return $this->dkimStatus->isConfigured()
+            && $this->cnameStatus->isConfigured()
+            && $this->dmarcStatus->isConfigured()
+            && $this->spfStatus->isConfigured();
     }
 
     /**
@@ -55,7 +109,12 @@ final readonly class DomainVerification
      */
     public function hasErrors(): bool
     {
-        return $this->dkim->hasError() || $this->returnPath->hasError();
+        return $this->dns !== null && (
+            $this->dns->dkimError !== null
+            || $this->dns->cnameError !== null
+            || $this->dns->dmarcError !== null
+            || $this->dns->spfError !== null
+        );
     }
 
     /**
@@ -65,14 +124,26 @@ final readonly class DomainVerification
      */
     public function errors(): array
     {
-        $errors = [];
-
-        if ($this->dkim->hasError() && $this->dkim->error !== null) {
-            $errors['dkim'] = $this->dkim->error;
+        if ($this->dns === null) {
+            return [];
         }
 
-        if ($this->returnPath->hasError() && $this->returnPath->error !== null) {
-            $errors['return_path'] = $this->returnPath->error;
+        $errors = [];
+
+        if ($this->dns->dkimError !== null) {
+            $errors['dkim'] = $this->dns->dkimError;
+        }
+
+        if ($this->dns->cnameError !== null) {
+            $errors['cname'] = $this->dns->cnameError;
+        }
+
+        if ($this->dns->dmarcError !== null) {
+            $errors['dmarc'] = $this->dns->dmarcError;
+        }
+
+        if ($this->dns->spfError !== null) {
+            $errors['spf'] = $this->dns->spfError;
         }
 
         return $errors;

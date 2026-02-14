@@ -264,15 +264,31 @@ $verification = $lettr->domains()->verify('example.com');
 if ($verification->isFullyVerified()) {
     echo "Domain is ready to send!";
 } else {
-    // Check individual records
-    if (!$verification->dkim->isValid()) {
-        echo "DKIM error: " . $verification->dkim->error;
-        echo "Expected: " . $verification->dkim->expected;
-        echo "Found: " . $verification->dkim->found;
+    // Check individual record statuses
+    echo $verification->dkimStatus->label();   // "Valid", "Invalid", "Missing", etc.
+    echo $verification->cnameStatus->label();
+    echo $verification->dmarcStatus->label();
+    echo $verification->spfStatus->label();
+
+    // DNS record errors
+    if ($verification->hasErrors()) {
+        foreach ($verification->errors() as $type => $error) {
+            echo "$type: $error";
+        }
     }
 
-    if (!$verification->returnPath->isValid()) {
-        echo "Return path error: " . $verification->returnPath->error;
+    // DMARC details
+    if ($verification->dmarc !== null) {
+        echo $verification->dmarc->status->label();
+        echo $verification->dmarc->policy;
+        echo $verification->dmarc->coveredByParentPolicy ? 'Yes' : 'No';
+    }
+
+    // SPF details
+    if ($verification->spf !== null) {
+        echo $verification->spf->status->label();
+        echo $verification->spf->record;
+        echo $verification->spf->includesSparkpost ? 'Yes' : 'No';
     }
 }
 ```

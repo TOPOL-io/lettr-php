@@ -124,10 +124,43 @@ final class DomainService
         /**
          * @var array{
          *     domain: string,
-         *     status: string,
-         *     can_send: bool,
-         *     dkim: array{status: string, error?: string|null, expected?: string|null, found?: string|null},
-         *     return_path: array{status: string, error?: string|null, expected?: string|null, found?: string|null},
+         *     dkim_status: string,
+         *     cname_status: string,
+         *     dmarc_status: string,
+         *     spf_status: string,
+         *     ownership_verified: bool|null,
+         *     is_primary_domain: bool,
+         *     dkim_warning_level: int,
+         *     cname_warning_level: int,
+         *     dmarc_warning_level: int,
+         *     spf_warning_level: int,
+         *     dns?: array{
+         *         dkim_record?: string|null,
+         *         cname_record?: string|null,
+         *         dmarc_record?: string|null,
+         *         spf_record?: string|null,
+         *         dkim_error?: string|null,
+         *         cname_error?: string|null,
+         *         dmarc_error?: string|null,
+         *         spf_error?: string|null,
+         *     }|null,
+         *     dmarc?: array{
+         *         is_valid: bool,
+         *         status: string,
+         *         found_at_domain?: string|null,
+         *         record?: string|null,
+         *         policy?: string|null,
+         *         subdomain_policy?: string|null,
+         *         error?: string|null,
+         *         covered_by_parent_policy: bool,
+         *     }|null,
+         *     spf?: array{
+         *         is_valid: bool,
+         *         status: string,
+         *         record?: string|null,
+         *         error?: string|null,
+         *         includes_sparkpost: bool,
+         *     }|null,
          * } $response
          */
         $response = $this->transporter->post(
