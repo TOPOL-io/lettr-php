@@ -95,16 +95,15 @@ final class DomainService
          *     status: string,
          *     can_send: bool,
          *     dkim_status: string,
-         *     return_path_status: string,
+         *     cname_status: string,
+         *     dmarc_status: string,
          *     created_at: string,
          *     verified_at?: string|null,
          *     tracking_domain?: string|null,
-         *     dns: array{
-         *         return_path_host: string,
-         *         return_path_value: string,
-         *         dkim?: array{selector: string, public_key: string, headers: string}|null,
+         *     dns?: array{
+         *         dkim: array{selector: string, public_key: string, headers: string},
          *     },
-         * } $response
+         * }  $response
          */
         $response = $this->transporter->get(self::DOMAINS_ENDPOINT.'/'.$domainName);
 

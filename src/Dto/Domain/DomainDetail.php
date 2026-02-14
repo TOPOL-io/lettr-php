@@ -18,12 +18,13 @@ final readonly class DomainDetail
         public DomainName $domain,
         public DomainStatus $status,
         public bool $canSend,
+        public DnsStatus $cnameStatus,
         public DnsStatus $dkimStatus,
-        public DnsStatus $returnPathStatus,
+        public DnsStatus $dmarcStatus,
         public Timestamp $createdAt,
         public ?Timestamp $verifiedAt,
         public ?string $trackingDomain,
-        public DomainDns $dns,
+        public ?DomainDkim $dkim,
     ) {}
 
     /**
@@ -34,14 +35,13 @@ final readonly class DomainDetail
      *     status: string,
      *     can_send: bool,
      *     dkim_status: string,
-     *     return_path_status: string,
+     *     cname_status: string,
+     *     dmarc_status: string,
      *     created_at: string,
      *     verified_at?: string|null,
      *     tracking_domain?: string|null,
-     *     dns: array{
-     *         return_path_host: string,
-     *         return_path_value: string,
-     *         dkim?: array{selector: string, public_key: string, headers: string}|null,
+     *     dns?: array{
+     *         dkim: array{selector: string, public_key: string, headers: string},
      *     },
      * }  $data
      */
@@ -51,12 +51,13 @@ final readonly class DomainDetail
             domain: new DomainName($data['domain']),
             status: DomainStatus::from($data['status']),
             canSend: $data['can_send'],
+            cnameStatus: DnsStatus::from($data['cname_status']),
             dkimStatus: DnsStatus::from($data['dkim_status']),
-            returnPathStatus: DnsStatus::from($data['return_path_status']),
+            dmarcStatus: DnsStatus::from($data['dmarc_status']),
             createdAt: Timestamp::fromString($data['created_at']),
             verifiedAt: isset($data['verified_at']) ? Timestamp::fromString($data['verified_at']) : null,
             trackingDomain: $data['tracking_domain'] ?? null,
-            dns: DomainDns::from($data['dns']),
+            dkim: isset($data['dns']) ? DomainDkim::from($data['dns']['dkim']) : null,
         );
     }
 
@@ -67,6 +68,6 @@ final readonly class DomainDetail
     {
         return $this->status === DomainStatus::Approved
             && $this->dkimStatus === DnsStatus::Valid
-            && $this->returnPathStatus === DnsStatus::Valid;
+            && $this->cnameStatus === DnsStatus::Valid;
     }
 }

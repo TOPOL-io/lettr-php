@@ -20,15 +20,18 @@ final readonly class DomainDkim
      *
      * @param  array{
      *     selector: string,
-     *     public_key: string,
+     *     public_key?: string,
+     *     public?: string,
      *     headers: string,
      * }  $data
      */
     public static function from(array $data): self
     {
+        $publicKey = $data['public_key'] ?? $data['public'] ?? null;
+
         return new self(
             selector: $data['selector'],
-            publicKey: $data['public_key'],
+            publicKey: $publicKey ?? '',
             headers: $data['headers'],
         );
     }
