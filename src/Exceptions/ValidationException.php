@@ -10,27 +10,15 @@ namespace Lettr\Exceptions;
 final class ValidationException extends ApiException
 {
     /**
-     * @var array<string, array<string>>
-     */
-    private array $errors;
-
-    /**
      * @param  array<string, array<string>>  $errors
      */
-    public function __construct(string $message, array $errors = [], ?\Throwable $previous = null)
-    {
+    public function __construct(
+        string $message,
+        /** @var array<string, array<string>> */
+        public readonly array $errors = [],
+        ?\Throwable $previous = null,
+    ) {
         parent::__construct($message, 422, $previous);
-        $this->errors = $errors;
-    }
-
-    /**
-     * Get the validation errors.
-     *
-     * @return array<string, array<string>>
-     */
-    public function errors(): array
-    {
-        return $this->errors;
     }
 
     /**

@@ -12,9 +12,13 @@ use Lettr\Contracts\TransporterContract;
 use Lettr\Dto\RateLimit;
 use Lettr\Dto\SendingQuota;
 use Lettr\Exceptions\ApiException;
+use Lettr\Exceptions\ConflictException;
+use Lettr\Exceptions\NotFoundException;
 use Lettr\Exceptions\QuotaExceededException;
 use Lettr\Exceptions\RateLimitException;
 use Lettr\Exceptions\TransporterException;
+use Lettr\Exceptions\UnauthorizedException;
+use Lettr\Exceptions\ValidationException;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -145,31 +149,51 @@ final class Client implements TransporterContract
             $contents = $response->getBody()->getContents();
 
             try {
-                /** @var array{message?: string, error?: string, error_code?: string} $body */
+                /** @var array{message?: string, error?: string, error_code?: string, errors?: array<string, array<string>>} $body */
                 $body = json_decode($contents, true, 512, JSON_THROW_ON_ERROR);
                 $message = $body['message'] ?? $body['error'] ?? 'Unknown API error';
             } catch (JsonException) {
                 $message = $contents ?: 'Unknown API error';
             }
 
-            if ($statusCode === 429) {
-                $headers = $this->extractHeaders($response);
-                $errorCode = $body['error_code'] ?? null;
-
-                if ($errorCode === 'quota_exceeded' || $errorCode === 'daily_quota_exceeded') {
-                    throw new QuotaExceededException($message, SendingQuota::fromHeaders($headers), $e);
-                }
-
-                $rateLimit = RateLimit::fromHeaders($headers);
-                $retryAfter = isset($headers['Retry-After']) ? (int) $headers['Retry-After'] : null;
-
-                throw new RateLimitException($message, $rateLimit, $retryAfter, $e);
-            }
-
-            throw new ApiException($message, $statusCode, $e);
+            match ($statusCode) {
+                401 => throw new UnauthorizedException($message, $e),
+                404 => throw new NotFoundException($message, $e),
+                409 => throw new ConflictException($message, $e),
+                422 => throw new ValidationException(
+                    $message,
+                    /** @var array<string, array<string>> */
+                    $body['errors'] ?? [],
+                    $e,
+                ),
+                429 => $this->handleRateLimitOrQuota($body ?? [], $response, $message, $e),
+                default => throw new ApiException($message, $statusCode, $e),
+            };
         }
 
         throw new TransporterException($e->getMessage(), (int) $e->getCode(), $e);
+    }
+
+    /**
+     * Handle 429 responses — either quota exceeded or rate limited.
+     *
+     * @param  array{error_code?: string}  $body
+     *
+     * @throws QuotaExceededException|RateLimitException
+     */
+    private function handleRateLimitOrQuota(array $body, ResponseInterface $response, string $message, GuzzleException $e): never
+    {
+        $headers = $this->extractHeaders($response);
+        $errorCode = $body['error_code'] ?? null;
+
+        if ($errorCode === 'quota_exceeded' || $errorCode === 'daily_quota_exceeded') {
+            throw new QuotaExceededException($message, SendingQuota::fromHeaders($headers), $e);
+        }
+
+        $rateLimit = RateLimit::fromHeaders($headers);
+        $retryAfter = isset($headers['Retry-After']) ? (int) $headers['Retry-After'] : null;
+
+        throw new RateLimitException($message, $rateLimit, $retryAfter, $e);
     }
 
     /**
