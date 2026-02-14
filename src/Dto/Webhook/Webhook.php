@@ -23,7 +23,7 @@ final readonly class Webhook
         public bool $enabled,
         public WebhookAuthType $authType,
         public EventTypeCollection $eventTypes,
-        public Timestamp $createdAt,
+        public ?Timestamp $createdAt = null,
         public ?WebhookStatus $lastStatus = null,
         public ?Timestamp $lastTriggeredAt = null,
         public ?string $lastError = null,
@@ -43,7 +43,7 @@ final readonly class Webhook
      *     last_status?: string|null,
      *     last_triggered_at?: string|null,
      *     last_error?: string|null,
-     *     created_at: string,
+     *     created_at?: string|null,
      *     updated_at?: string|null,
      * }  $data
      */
@@ -58,7 +58,7 @@ final readonly class Webhook
             eventTypes: EventTypeCollection::from(
                 array_map(static fn (string $type): EventType => EventType::from($type), $data['event_types'])
             ),
-            createdAt: Timestamp::fromString($data['created_at']),
+            createdAt: isset($data['created_at']) ? Timestamp::fromString($data['created_at']) : null,
             lastStatus: isset($data['last_status']) ? WebhookStatus::from($data['last_status']) : null,
             lastTriggeredAt: isset($data['last_triggered_at']) ? Timestamp::fromString($data['last_triggered_at']) : null,
             lastError: $data['last_error'] ?? null,

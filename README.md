@@ -209,11 +209,11 @@ $email = $lettr->emails()->create()
 $domains = $lettr->domains()->list();
 
 foreach ($domains as $domain) {
-    echo $domain->domain;           // example.com
-    echo $domain->status->value;    // 'pending', 'approved'
-    echo $domain->canSend;          // true/false
-    echo $domain->dkimStatus;       // DnsStatus enum
-    echo $domain->returnPathStatus; // DnsStatus enum
+    echo $domain->domain;                    // example.com
+    echo $domain->status->value;             // 'pending', 'approved'
+    echo $domain->canSend;                   // true/false
+    echo $domain->dkimStatus->value;         // 'valid', 'invalid', etc.
+    echo $domain->returnPathStatus->value;   // 'valid', 'invalid', etc.
 }
 ```
 
@@ -319,7 +319,7 @@ foreach ($webhooks as $webhook) {
     echo $webhook->name;
     echo $webhook->url;
     echo $webhook->enabled;
-    echo $webhook->authType->value;  // 'none', 'basic', 'bearer'
+    echo $webhook->authType->value;  // 'none', 'basic', 'oauth2'
 
     // Event types this webhook listens to
     foreach ($webhook->eventTypes as $eventType) {
@@ -397,13 +397,19 @@ $template = $lettr->templates()->get('welcome-email', projectId: 123);
 ```php
 use Lettr\Dto\Template\CreateTemplateData;
 
+// With HTML content
 $template = $lettr->templates()->create(new CreateTemplateData(
     name: 'My Template',
     slug: 'my-template',        // optional, auto-generated if not provided
     projectId: 123,             // optional
     folderId: 5,                // optional
-    html: '<html>...</html>',   // optional
-    json: '{"blocks":[]}',      // optional, TOPOL.io JSON format
+    html: '<html>...</html>',   // provide html OR json, not both
+));
+
+// Or with TOPOL.io JSON format
+$template = $lettr->templates()->create(new CreateTemplateData(
+    name: 'My Template',
+    json: '{"blocks":[]}',      // TOPOL.io editor JSON
 ));
 
 echo $template->id;
