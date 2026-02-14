@@ -42,16 +42,18 @@ final readonly class RateLimit
      */
     private static function headerValue(array $headers, string $name): ?int
     {
-        $value = $headers[$name] ?? $headers[strtolower($name)] ?? null;
+        $lower = strtolower($name);
 
-        if ($value === null) {
-            return null;
+        foreach ($headers as $key => $value) {
+            if (strtolower($key) === $lower) {
+                if (is_array($value)) {
+                    $value = $value[0] ?? null;
+                }
+
+                return $value !== null ? (int) $value : null;
+            }
         }
 
-        if (is_array($value)) {
-            $value = $value[0] ?? null;
-        }
-
-        return $value !== null ? (int) $value : null;
+        return null;
     }
 }

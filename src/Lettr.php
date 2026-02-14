@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Lettr;
 
 use Lettr\Contracts\TransporterContract;
+use Lettr\Dto\RateLimit;
 use Lettr\Services\DomainService;
 use Lettr\Services\EmailService;
 use Lettr\Services\HealthService;
@@ -128,6 +129,26 @@ final class Lettr
         }
 
         return $this->healthService;
+    }
+
+    /**
+     * Get the rate limit from the last API response.
+     *
+     * Available on every API response (3 requests per second per team).
+     */
+    public function lastRateLimit(): ?RateLimit
+    {
+        return RateLimit::fromHeaders($this->client->lastResponseHeaders());
+    }
+
+    /**
+     * Get the response headers from the last API request.
+     *
+     * @return array<string, string|string[]>
+     */
+    public function lastResponseHeaders(): array
+    {
+        return $this->client->lastResponseHeaders();
     }
 
     /**
