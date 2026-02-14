@@ -28,7 +28,7 @@ final class Lettr
     /**
      * The current SDK version.
      */
-    public const VERSION = '0.7.0';
+    public const VERSION = '0.8.0';
 
     /**
      * The API base URL.
