@@ -9,7 +9,11 @@ use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\GuzzleException;
 use JsonException;
 use Lettr\Contracts\TransporterContract;
+use Lettr\Dto\RateLimit;
+use Lettr\Dto\SendingQuota;
 use Lettr\Exceptions\ApiException;
+use Lettr\Exceptions\QuotaExceededException;
+use Lettr\Exceptions\RateLimitException;
 use Lettr\Exceptions\TransporterException;
 
 /**
@@ -20,6 +24,9 @@ final class Client implements TransporterContract
     private readonly ClientInterface $httpClient;
 
     private readonly string $apiKey;
+
+    /** @var array<string, string|string[]> */
+    private array $lastHeaders = [];
 
     public function __construct(string $apiKey)
     {
@@ -64,6 +71,14 @@ final class Client implements TransporterContract
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function lastResponseHeaders(): array
+    {
+        return $this->lastHeaders;
+    }
+
+    /**
      * Send a request to the API.
      *
      * @param  array<string, mixed>|null  $data
@@ -93,6 +108,7 @@ final class Client implements TransporterContract
 
         try {
             $response = $this->httpClient->request($method, $uri, $options);
+            $this->lastHeaders = $this->extractHeaders($response);
             $contents = $response->getBody()->getContents();
 
             if (trim($contents) === '') {
@@ -128,16 +144,45 @@ final class Client implements TransporterContract
             $contents = $response->getBody()->getContents();
 
             try {
-                /** @var array{message?: string, error?: string} $body */
+                /** @var array{message?: string, error?: string, error_code?: string} $body */
                 $body = json_decode($contents, true, 512, JSON_THROW_ON_ERROR);
                 $message = $body['message'] ?? $body['error'] ?? 'Unknown API error';
             } catch (JsonException) {
                 $message = $contents ?: 'Unknown API error';
             }
 
+            if ($statusCode === 429) {
+                $headers = $this->extractHeaders($response);
+                $errorCode = $body['error_code'] ?? null;
+
+                if ($errorCode === 'quota_exceeded' || $errorCode === 'daily_quota_exceeded') {
+                    throw new QuotaExceededException($message, SendingQuota::fromHeaders($headers), $e);
+                }
+
+                $rateLimit = RateLimit::fromHeaders($headers);
+                $retryAfter = isset($headers['Retry-After']) ? (int) $headers['Retry-After'] : null;
+
+                throw new RateLimitException($message, $rateLimit, $retryAfter, $e);
+            }
+
             throw new ApiException($message, $statusCode, $e);
         }
 
         throw new TransporterException($e->getMessage(), (int) $e->getCode(), $e);
+    }
+
+    /**
+     * Extract headers from a PSR-7 response into a flat array.
+     *
+     * @return array<string, string|string[]>
+     */
+    private function extractHeaders(\Psr\Http\Message\ResponseInterface $response): array
+    {
+        $headers = [];
+        foreach ($response->getHeaders() as $name => $values) {
+            $headers[$name] = count($values) === 1 ? $values[0] : $values;
+        }
+
+        return $headers;
     }
 }

@@ -42,7 +42,7 @@ final class EmailService
         /** @var array{request_id: string, accepted: int, rejected: int} $response */
         $response = $this->transporter->post(self::EMAILS_ENDPOINT, $emailData->toArray());
 
-        return SendEmailResponse::from($response);
+        return SendEmailResponse::from($response, $this->transporter->lastResponseHeaders());
     }
 
     /**

@@ -58,6 +58,11 @@ class TemplatesMockTransporter implements TransporterContract
     {
         $this->lastUri = $uri;
     }
+
+    public function lastResponseHeaders(): array
+    {
+        return [];
+    }
 }
 
 test('can create TemplateService instance', function (): void {

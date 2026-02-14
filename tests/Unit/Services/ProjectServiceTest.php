@@ -52,6 +52,11 @@ class ProjectsMockTransporter implements TransporterContract
     {
         $this->lastUri = $uri;
     }
+
+    public function lastResponseHeaders(): array
+    {
+        return [];
+    }
 }
 
 test('can create ProjectService instance', function (): void {

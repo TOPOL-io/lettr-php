@@ -43,4 +43,11 @@ interface TransporterContract
      * @throws LettrException
      */
     public function delete(string $uri): void;
+
+    /**
+     * Get the response headers from the last request.
+     *
+     * @return array<string, string|string[]>
+     */
+    public function lastResponseHeaders(): array;
 }

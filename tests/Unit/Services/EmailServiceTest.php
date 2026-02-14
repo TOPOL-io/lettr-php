@@ -6,6 +6,7 @@ use Lettr\Builders\EmailBuilder;
 use Lettr\Contracts\TransporterContract;
 use Lettr\Dto\Email\SendEmailData;
 use Lettr\Dto\Email\SendEmailResponse;
+use Lettr\Dto\SendingQuota;
 use Lettr\Responses\GetEmailResponse;
 use Lettr\Responses\ListEmailsResponse;
 use Lettr\Services\EmailService;
@@ -25,6 +26,9 @@ class MockTransporter implements TransporterContract
 
     /** @var array<string, mixed> */
     public array $response = [];
+
+    /** @var array<string, string|string[]> */
+    public array $responseHeaders = [];
 
     public function post(string $uri, array $data): array
     {
@@ -52,6 +56,11 @@ class MockTransporter implements TransporterContract
     public function delete(string $uri): void
     {
         $this->lastUri = $uri;
+    }
+
+    public function lastResponseHeaders(): array
+    {
+        return $this->responseHeaders;
     }
 }
 
@@ -260,4 +269,53 @@ test('sendTemplate helper without optional parameters', function (): void {
         ->and($transporter->lastData)->not->toHaveKey('template_version')
         ->and($transporter->lastData)->not->toHaveKey('project_id')
         ->and($transporter->lastData)->not->toHaveKey('substitution_data');
+});
+
+test('send includes quota from response headers', function (): void {
+    $transporter = new MockTransporter;
+    $transporter->response = ['request_id' => 'req_quota', 'accepted' => 1, 'rejected' => 0];
+    $transporter->responseHeaders = [
+        'X-Monthly-Limit' => '3000',
+        'X-Monthly-Remaining' => '2500',
+        'X-Monthly-Reset' => '1740787200',
+        'X-Daily-Limit' => '100',
+        'X-Daily-Remaining' => '75',
+        'X-Daily-Reset' => '1739600000',
+    ];
+
+    $service = new EmailService($transporter);
+    $data = SendEmailData::from([
+        'from' => 'sender@example.com',
+        'to' => ['recipient@example.com'],
+        'subject' => 'Test',
+        'text' => 'Body',
+    ]);
+
+    $response = $service->send($data);
+
+    expect($response->quota)->toBeInstanceOf(SendingQuota::class)
+        ->and($response->quota->monthlyLimit)->toBe(3000)
+        ->and($response->quota->monthlyRemaining)->toBe(2500)
+        ->and($response->quota->monthlyReset)->toBe(1740787200)
+        ->and($response->quota->dailyLimit)->toBe(100)
+        ->and($response->quota->dailyRemaining)->toBe(75)
+        ->and($response->quota->dailyReset)->toBe(1739600000);
+});
+
+test('send returns null quota when no headers present', function (): void {
+    $transporter = new MockTransporter;
+    $transporter->response = ['request_id' => 'req_noquota', 'accepted' => 1, 'rejected' => 0];
+    $transporter->responseHeaders = [];
+
+    $service = new EmailService($transporter);
+    $data = SendEmailData::from([
+        'from' => 'sender@example.com',
+        'to' => ['recipient@example.com'],
+        'subject' => 'Test',
+        'text' => 'Body',
+    ]);
+
+    $response = $service->send($data);
+
+    expect($response->quota)->toBeNull();
 });

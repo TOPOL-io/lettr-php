@@ -35,6 +35,11 @@ class HealthMockTransporter implements TransporterContract
     }
 
     public function delete(string $uri): void {}
+
+    public function lastResponseHeaders(): array
+    {
+        return [];
+    }
 }
 
 test('can create HealthService instance', function (): void {

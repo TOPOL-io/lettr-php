@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Lettr\Dto\Email;
 
+use Lettr\Dto\SendingQuota;
 use Lettr\ValueObjects\RequestId;
 
 /**
@@ -15,6 +16,7 @@ final readonly class SendEmailResponse
         public RequestId $requestId,
         public int $accepted,
         public int $rejected,
+        public ?SendingQuota $quota = null,
     ) {}
 
     /**
@@ -25,13 +27,15 @@ final readonly class SendEmailResponse
      *     accepted: int,
      *     rejected: int,
      * }  $data
+     * @param  array<string, string|string[]>  $headers
      */
-    public static function from(array $data): self
+    public static function from(array $data, array $headers = []): self
     {
         return new self(
             requestId: new RequestId($data['request_id']),
             accepted: $data['accepted'],
             rejected: $data['rejected'],
+            quota: SendingQuota::fromHeaders($headers),
         );
     }
 

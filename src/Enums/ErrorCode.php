@@ -17,6 +17,8 @@ enum ErrorCode: string
     case WebhookNotFound = 'webhook_not_found';
     case InvalidApiKey = 'invalid_api_key';
     case RateLimitExceeded = 'rate_limit_exceeded';
+    case QuotaExceeded = 'quota_exceeded';
+    case DailyQuotaExceeded = 'daily_quota_exceeded';
     case InternalError = 'internal_error';
     case InvalidRecipient = 'invalid_recipient';
     case MessageTooLarge = 'message_too_large';
@@ -36,6 +38,8 @@ enum ErrorCode: string
             self::WebhookNotFound => 'The specified webhook was not found.',
             self::InvalidApiKey => 'The API key is invalid.',
             self::RateLimitExceeded => 'Rate limit exceeded. Please try again later.',
+            self::QuotaExceeded => 'Sending quota exceeded. Upgrade your plan to continue sending.',
+            self::DailyQuotaExceeded => 'Daily sending quota exceeded. Please try again tomorrow.',
             self::InternalError => 'An internal error occurred.',
             self::InvalidRecipient => 'One or more recipients are invalid.',
             self::MessageTooLarge => 'The message exceeds the maximum size limit.',
@@ -76,5 +80,16 @@ enum ErrorCode: string
     public function isRateLimitError(): bool
     {
         return $this === self::RateLimitExceeded;
+    }
+
+    /**
+     * Check if this is a quota error.
+     */
+    public function isQuotaError(): bool
+    {
+        return in_array($this, [
+            self::QuotaExceeded,
+            self::DailyQuotaExceeded,
+        ], true);
     }
 }
