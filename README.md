@@ -247,13 +247,21 @@ $domain = $lettr->domains()->get('example.com');
 echo $domain->domain;
 echo $domain->status;
 echo $domain->canSend;
+echo $domain->dkimStatus->label();   // DnsStatus enum
+echo $domain->cnameStatus->label();  // DnsStatus enum
+echo $domain->dmarcStatus->label();  // DnsStatus enum
 echo $domain->trackingDomain;
 echo $domain->createdAt;
 echo $domain->verifiedAt;
 
-// DNS configuration
-echo $domain->dns->returnPathHost;
-echo $domain->dns->returnPathValue;
+// DKIM configuration (if available)
+if ($domain->dkim !== null) {
+    echo $domain->dkim->selector;
+    echo $domain->dkim->publicKey;
+    echo $domain->dkim->headers;
+    echo $domain->dkim->recordName('example.com'); // Full DNS record name
+    echo $domain->dkim->recordValue();              // Full DNS record value
+}
 ```
 
 ### Verify Domain DNS
@@ -582,8 +590,9 @@ $requestId = new RequestId('req_abc123');
 
 // Timestamps
 $timestamp = Timestamp::fromString('2024-01-15T10:30:00Z');
-echo $timestamp->toIso8601();
-echo $timestamp->toDateTime();
+echo $timestamp->toIso8601();       // ISO 8601 string
+echo $timestamp->value;             // DateTimeImmutable instance
+echo $timestamp->format('Y-m-d');   // Custom format
 ```
 
 ## Error Handling
@@ -651,14 +660,28 @@ try {
 
 ### Rate Limits
 
-The API enforces a rate limit of **3 requests per second** per team, shared across all API keys. Rate limit headers are included in every response:
+The API enforces a rate limit of **3 requests per second** per team, shared across all API keys. Rate limit headers are included in every authenticated API response:
 
 | Header | Description |
 |--------|-------------|
-| `X-RateLimit-Limit` | Maximum requests per second |
-| `X-RateLimit-Remaining` | Remaining requests in current window |
-| `X-RateLimit-Reset` | Unix timestamp when the limit resets |
+| `X-Ratelimit-Limit` | Maximum requests per second |
+| `X-Ratelimit-Remaining` | Remaining requests in current window |
+| `X-Ratelimit-Reset` | Unix timestamp when the limit resets |
 | `Retry-After` | Seconds to wait (only on 429 responses) |
+
+You can read rate limit info after any API call:
+
+```php
+$lettr->domains()->list();
+
+$rateLimit = $lettr->lastRateLimit();
+
+if ($rateLimit !== null) {
+    echo $rateLimit->limit;     // 3
+    echo $rateLimit->remaining; // 2
+    echo $rateLimit->reset;     // Unix timestamp
+}
+```
 
 ### Sending Quotas
 
