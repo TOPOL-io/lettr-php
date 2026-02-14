@@ -37,6 +37,14 @@ $response = $lettr->emails()->send(
 
 echo $response->requestId; // Request ID for tracking
 echo $response->accepted;  // Number of accepted recipients
+
+// Sending quota (free tier teams only)
+if ($response->quota !== null) {
+    echo $response->quota->monthlyLimit;     // e.g. 3000
+    echo $response->quota->monthlyRemaining; // e.g. 2500
+    echo $response->quota->dailyLimit;       // e.g. 100
+    echo $response->quota->dailyRemaining;   // e.g. 75
+}
 ```
 
 ## Sending Emails
@@ -90,8 +98,12 @@ $response = $lettr->emails()->send($email);
 
 For simple use cases:
 
+The `from` parameter accepts a plain email string or an `EmailAddress` value object when you need a sender name:
+
 ```php
-// HTML email
+use Lettr\ValueObjects\EmailAddress;
+
+// Pass a string — validated as an email address
 $response = $lettr->emails()->sendHtml(
     from: 'sender@example.com',
     to: 'recipient@example.com',
@@ -99,9 +111,17 @@ $response = $lettr->emails()->sendHtml(
     html: '<p>HTML content</p>',
 );
 
+// Pass an EmailAddress — includes sender name
+$response = $lettr->emails()->sendHtml(
+    from: new EmailAddress('sender@example.com', 'Sender Name'),
+    to: 'recipient@example.com',
+    subject: 'Hello',
+    html: '<p>HTML content</p>',
+);
+
 // Plain text email
 $response = $lettr->emails()->sendText(
-    from: ['email' => 'sender@example.com', 'name' => 'Sender'],
+    from: 'sender@example.com',
     to: ['recipient1@example.com', 'recipient2@example.com'],
     subject: 'Hello',
     text: 'Plain text content',
@@ -623,6 +643,8 @@ use Lettr\Exceptions\ValidationException;
 use Lettr\Exceptions\NotFoundException;
 use Lettr\Exceptions\UnauthorizedException;
 use Lettr\Exceptions\ConflictException;
+use Lettr\Exceptions\QuotaExceededException;
+use Lettr\Exceptions\RateLimitException;
 use Lettr\Exceptions\InvalidValueException;
 
 try {
@@ -639,6 +661,30 @@ try {
 } catch (ConflictException $e) {
     // Resource conflict (409)
     echo "Conflict: " . $e->getMessage();
+} catch (QuotaExceededException $e) {
+    // Sending quota exceeded (429) - monthly or daily limit reached
+    echo "Quota exceeded: " . $e->getMessage();
+
+    if ($e->quota !== null) {
+        echo $e->quota->monthlyLimit;       // Total monthly limit
+        echo $e->quota->monthlyRemaining;   // 0 when exhausted
+        echo $e->quota->monthlyReset;       // Unix timestamp - start of next month
+        echo $e->quota->dailyLimit;         // Total daily limit
+        echo $e->quota->dailyRemaining;     // 0 when exhausted
+        echo $e->quota->dailyReset;         // Unix timestamp - tomorrow midnight UTC
+    }
+} catch (RateLimitException $e) {
+    // API rate limit exceeded (429) - too many requests per second
+    echo "Rate limited: " . $e->getMessage();
+
+    if ($e->rateLimit !== null) {
+        echo $e->rateLimit->limit;      // Max requests per second
+        echo $e->rateLimit->remaining;  // Remaining requests
+        echo $e->rateLimit->reset;      // Unix timestamp when limit resets
+    }
+    if ($e->retryAfter !== null) {
+        sleep($e->retryAfter);          // Seconds to wait before retrying
+    }
 } catch (ApiException $e) {
     // Other API errors
     echo "API error ({$e->getCode()}): " . $e->getMessage();
@@ -650,6 +696,32 @@ try {
     echo "Invalid value: " . $e->getMessage();
 }
 ```
+
+### Rate Limits
+
+The API enforces a rate limit of **3 requests per second** per team, shared across all API keys. Rate limit headers are included in every response:
+
+| Header | Description |
+|--------|-------------|
+| `X-RateLimit-Limit` | Maximum requests per second |
+| `X-RateLimit-Remaining` | Remaining requests in current window |
+| `X-RateLimit-Reset` | Unix timestamp when the limit resets |
+| `Retry-After` | Seconds to wait (only on 429 responses) |
+
+### Sending Quotas
+
+Free tier teams have monthly and daily sending limits. Quota headers are included in send email responses:
+
+| Header | Description |
+|--------|-------------|
+| `X-Monthly-Limit` | Total monthly email limit |
+| `X-Monthly-Remaining` | Remaining emails this month |
+| `X-Monthly-Reset` | Unix timestamp when monthly quota resets |
+| `X-Daily-Limit` | Total daily email limit |
+| `X-Daily-Remaining` | Remaining emails today |
+| `X-Daily-Reset` | Unix timestamp when daily quota resets |
+
+Quota information is available on successful responses via `$response->quota` and on quota exceeded errors via the `QuotaExceededException`.
 
 ## Development
 
