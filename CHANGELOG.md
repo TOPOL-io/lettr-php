@@ -4,6 +4,37 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.5.0] - 2026-08-13
+
+Covers the reworked bulk contact import. Everything here is additive — code written against 2.4.0 keeps compiling and sending the exact same payloads.
+
+### Added
+- **Per-contact bulk create.** `BulkCreateAudienceContactsData` now supports a second request shape where each contact carries its own properties, lists and topic subscriptions, alongside the original flat `emails` list. Two named constructors make the choice explicit:
+  - `BulkCreateAudienceContactsData::forEmails($emails, $listId, $properties, $listIds, $topics, $updateExisting)` — the original shape.
+  - `BulkCreateAudienceContactsData::forContacts($contacts, $listIds, $topics, $properties, $updateExisting)` — one `BulkAudienceContactRow` per contact.
+
+  The plain constructor still accepts `(emails, listId, properties)` positionally, so existing calls are untouched; the new fields were appended as optional parameters. Exactly one of `emails`/`contacts` must be non-empty — an empty payload now throws `InvalidValueException` instead of being sent to the API.
+- New request DTOs: `BulkAudienceContactRow` (`email`, `properties`, `listIds`, `topics`) and `AudienceTopicSubscription` (`id` + state, with `AudienceTopicSubscription::optIn()` / `::optOut()` shortcuts).
+- New enum `AudienceTopicSubscriptionState` (`opt_in`, `opt_out`) for what a request should *do* with a topic. Deliberately separate from the existing `AudienceTopicDefaultSubscription`, which describes how a topic behaves for new contacts. An `optOut()` on a topic whose default is opt-out suppresses the auto-subscription in the same request, instead of needing a second call.
+- **Batch-wide `listIds` and `topics`,** plus `updateExisting`, on `BulkCreateAudienceContactsData`. Batch-wide lists and topics are unioned into every row; a row-level property key or `opt_out` wins over the batch-wide value. `updateExisting: true` merges properties (submitted keys overwrite, absent keys are preserved) and allows dropping a subscription; it is only emitted when `true`, so legacy payloads stay byte-identical.
+- **Bulk create now reports what happened per row.** `BulkStoreAudienceContactsResult` gains `updated`, `errorCount`, `errors` (`BulkAudienceContactError[]` — `index`, `email`, `errorCode`, `error`) and `contacts` (`BulkAudienceContactRef[]` — `id`, `email`, `created`), plus the helpers `hasErrors()`, `contactIds()` and `idFor(string $email)`. `created` and `alreadyExisted` keep their exact meaning, and all new fields default when the API omits them, so the DTO also reads a pre-TPL-2105 response.
+
+  A bulk create can **partially succeed**: rows that fail validation are skipped and returned in `errors` while the rest of the batch commits, and the call still returns HTTP 201. Check `hasErrors()` — do not read a successful return as "everything landed".
+
+  Note that `alreadyExisted` and `updated` overlap by design. They answer different questions ("was the address already in the audience?" vs "did this request change the contact?"), so they do not sum to the row count: a contact that already existed and got attached to a list is counted in both.
+- New enum `BulkAudienceContactErrorCode` (`missing_email`, `invalid_email`, `invalid_property_value`, `unknown_property_key`, `unknown_list`, `unknown_topic`, `invalid_topic_subscription`) with a `message()` helper. `BulkAudienceContactError->errorCode` is typed `BulkAudienceContactErrorCode|string`, so a code added server-side survives as a raw string instead of throwing `ValueError`.
+- **Bulk topic subscribe/unsubscribe** — 2 new endpoints on `$lettr->audience->contacts()`, mirroring the existing `bulkAttachLists()`/`bulkDetachLists()` pair:
+  - `bulkSubscribeTopics(BulkAudienceContactTopicsData)` — `POST /audience/contacts/topics/bulk`, returns `BulkSubscribeContactsToTopicsResult` (`subscribed`, `alreadySubscribed`, `totalPairs`).
+  - `bulkUnsubscribeTopics(BulkAudienceContactTopicsData)` — `DELETE /audience/contacts/topics/bulk` with a request body, returns `BulkUnsubscribeContactsFromTopicsResult` (`unsubscribed`, `totalPairs`). Pairs that did not exist are ignored.
+
+  Both process every `contactIds × topicIds` combination (up to 1000 × 50). A single `BulkAudienceContactTopicsData` serves both directions. Feed them `$result->contactIds()` from a bulk create — no id lookup needed.
+- `ApiException::errorCode()` (and the readonly `->errorCode` property) exposes the machine-readable `error_code` from the response body on every API exception, or `null` when the API did not send one. The raw string is kept so a code added server-side is still readable.
+- `ContactAlreadyExistsException` — thrown by `$lettr->audience->contacts()->create()` when the email is already in the team's audience. It carries the colliding `->email`. This is a client-correctable condition, **not** an outage: do not retry it; update the existing contact with `update()`, or use `bulkCreate()` with `updateExisting: true`.
+
+### Changed
+- `Exceptions\ConflictException` is no longer `final`, so `ContactAlreadyExistsException` can extend it. Existing `catch (ConflictException)` and `catch (ApiException)` handlers catch the new exception unchanged.
+- Creating a contact whose email already exists now surfaces as `ContactAlreadyExistsException` (HTTP 409, `resource_already_exists`). The API previously let this escape as HTTP 500 with the misleading `send_error` code, which arrived as a plain `ApiException`. **If your retry policy retries 5xx, duplicate creates are no longer retried** — which was pointless anyway. Any error mapping or docs of yours that name `send_error` for this endpoint should be corrected. A 409 with any other error code stays a plain `ConflictException`.
+
 ## [2.4.0] - 2026-06-01
 
 ### Added

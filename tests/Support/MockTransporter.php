@@ -5,15 +5,20 @@ declare(strict_types=1);
 namespace Tests\Support;
 
 use Lettr\Contracts\TransporterContract;
+use Throwable;
 
 /**
  * Shared mock transporter for service tests.
  *
  * Tracks the URI, body, and query string of the last call, and returns a
- * configurable response payload plus optional response headers.
+ * configurable response payload plus optional response headers. Set `$throws`
+ * to make every request raise that exception instead, for testing how services
+ * translate API errors.
  */
 final class MockTransporter implements TransporterContract
 {
+    public ?Throwable $throws = null;
+
     public ?string $lastUri = null;
 
     /** @var array<string, mixed>|null */
@@ -34,6 +39,10 @@ final class MockTransporter implements TransporterContract
     {
         $this->lastUri = $uri;
         $this->lastData = $data;
+
+        if ($this->throws !== null) {
+            throw $this->throws;
+        }
 
         return $this->response;
     }

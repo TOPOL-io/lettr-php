@@ -20,8 +20,9 @@ final class RateLimitException extends ApiException
         ?RateLimit $rateLimit = null,
         ?int $retryAfter = null,
         ?\Throwable $previous = null,
+        ?string $errorCode = null,
     ) {
-        parent::__construct($message, 429, $previous);
+        parent::__construct($message, 429, $previous, $errorCode);
         $this->rateLimit = $rateLimit;
         $this->retryAfter = $retryAfter;
     }

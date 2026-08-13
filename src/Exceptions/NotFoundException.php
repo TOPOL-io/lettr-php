@@ -9,8 +9,11 @@ namespace Lettr\Exceptions;
  */
 final class NotFoundException extends ApiException
 {
-    public function __construct(string $message = 'Resource not found.', ?\Throwable $previous = null)
-    {
-        parent::__construct($message, 404, $previous);
+    public function __construct(
+        string $message = 'Resource not found.',
+        ?\Throwable $previous = null,
+        ?string $errorCode = null,
+    ) {
+        parent::__construct($message, 404, $previous, $errorCode);
     }
 }

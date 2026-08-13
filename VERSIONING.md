@@ -84,6 +84,9 @@ See [CHANGELOG.md](CHANGELOG.md) for the full notes; the table below lists each 
 
 | Version | Type     | Highlights                                                                                     |
 | :------ | :------- | :--------------------------------------------------------------------------------------------- |
+| `2.5.0` | Minor    | Per-contact bulk import (rows, batch lists/topics, `update_existing`, partial-failure reporting), bulk topic subscribe/unsubscribe, `ContactAlreadyExistsException` |
+| `2.4.0` | Minor    | Optional `User-Agent` suffix for wrapping packages                                             |
+| `2.3.0` | Minor    | `CampaignDetail` split off `CampaignSummary`                                                   |
 | `2.2.0` | Minor    | Campaigns module (`$lettr->campaigns()` — list, get, events, send, schedule, unschedule)       |
 | `2.1.0` | Minor    | Audience module (lists, contacts, topics, properties, segments)                                |
 | `2.0.0` | Major    | Domain DTO cleanup, email list & events endpoints, `EmailService::sendTemplate()` reorder       |
