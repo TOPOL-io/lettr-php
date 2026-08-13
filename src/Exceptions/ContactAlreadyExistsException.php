@@ -9,10 +9,8 @@ namespace Lettr\Exceptions;
  * the team's audience (HTTP 409, `resource_already_exists`).
  *
  * This is a client-correctable condition, not an outage — **do not retry it**.
- * Update the existing contact with
- * {@see \Lettr\Services\Audience\AudienceContactService::update()}, or use
- * {@see \Lettr\Services\Audience\AudienceContactService::bulkCreate()} with
- * `updateExisting: true`.
+ * Update the existing contact with `AudienceContactService::update()`, or use
+ * `AudienceContactService::bulkCreate()` with `updateExisting: true`.
  *
  * Older API versions surfaced this as an HTTP 500 with the misleading
  * `send_error` code, which arrived as a plain {@see ApiException}. Extending

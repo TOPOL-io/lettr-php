@@ -11,8 +11,8 @@ use Lettr\Contracts\Arrayable;
  * combination in bulk (up to 1000 contacts × 50 topics).
  *
  * The same body serves both directions — see
- * {@see \Lettr\Services\Audience\AudienceContactService::bulkSubscribeTopics()}
- * and {@see \Lettr\Services\Audience\AudienceContactService::bulkUnsubscribeTopics()}.
+ * `AudienceContactService::bulkSubscribeTopics()` and
+ * `AudienceContactService::bulkUnsubscribeTopics()`.
  */
 final readonly class BulkAudienceContactTopicsData implements Arrayable
 {
