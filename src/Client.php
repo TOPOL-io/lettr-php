@@ -221,19 +221,22 @@ final class Client implements TransporterContract
                 $message = $contents ?: 'Unknown API error';
             }
 
+            $errorCode = $body['error_code'] ?? null;
+
             match ($statusCode) {
-                401 => throw new UnauthorizedException($message, $e),
-                403 => throw new ForbiddenException($message, $e),
-                404 => throw new NotFoundException($message, $e),
-                409 => throw new ConflictException($message, $e),
+                401 => throw new UnauthorizedException($message, $e, $errorCode),
+                403 => throw new ForbiddenException($message, $e, $errorCode),
+                404 => throw new NotFoundException($message, $e, $errorCode),
+                409 => throw new ConflictException($message, $e, $errorCode),
                 422 => throw new ValidationException(
                     $message,
                     /** @var array<string, array<string>> */
                     $body['errors'] ?? [],
                     $e,
+                    $errorCode,
                 ),
                 429 => $this->handleRateLimitOrQuota($body ?? [], $response, $message, $e),
-                default => throw new ApiException($message, $statusCode, $e),
+                default => throw new ApiException($message, $statusCode, $e, $errorCode),
             };
         }
 
@@ -253,13 +256,13 @@ final class Client implements TransporterContract
         $errorCode = $body['error_code'] ?? null;
 
         if ($errorCode === 'quota_exceeded' || $errorCode === 'daily_quota_exceeded') {
-            throw new QuotaExceededException($message, SendingQuota::fromHeaders($headers), $e);
+            throw new QuotaExceededException($message, SendingQuota::fromHeaders($headers), $e, $errorCode);
         }
 
         $rateLimit = RateLimit::fromHeaders($headers);
         $retryAfter = isset($headers['Retry-After']) ? (int) $headers['Retry-After'] : null;
 
-        throw new RateLimitException($message, $rateLimit, $retryAfter, $e);
+        throw new RateLimitException($message, $rateLimit, $retryAfter, $e, $errorCode);
     }
 
     /**

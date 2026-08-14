@@ -9,8 +9,11 @@ namespace Lettr\Exceptions;
  */
 final class UnauthorizedException extends ApiException
 {
-    public function __construct(string $message = 'Invalid API key.', ?\Throwable $previous = null)
-    {
-        parent::__construct($message, 401, $previous);
+    public function __construct(
+        string $message = 'Invalid API key.',
+        ?\Throwable $previous = null,
+        ?string $errorCode = null,
+    ) {
+        parent::__construct($message, 401, $previous, $errorCode);
     }
 }

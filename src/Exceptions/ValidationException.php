@@ -17,8 +17,9 @@ final class ValidationException extends ApiException
         /** @var array<string, array<string>> */
         public readonly array $errors = [],
         ?\Throwable $previous = null,
+        ?string $errorCode = null,
     ) {
-        parent::__construct($message, 422, $previous);
+        parent::__construct($message, 422, $previous, $errorCode);
     }
 
     /**

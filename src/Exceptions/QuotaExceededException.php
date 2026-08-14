@@ -17,8 +17,9 @@ final class QuotaExceededException extends ApiException
         string $message = 'Sending quota exceeded.',
         ?SendingQuota $quota = null,
         ?\Throwable $previous = null,
+        ?string $errorCode = null,
     ) {
-        parent::__construct($message, 429, $previous);
+        parent::__construct($message, 429, $previous, $errorCode);
         $this->quota = $quota;
     }
 }

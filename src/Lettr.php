@@ -36,7 +36,7 @@ final class Lettr
      *             single source of truth for the version and will be removed in
      *             a future major release.
      */
-    public const VERSION = '2.4.0';
+    public const VERSION = '2.5.0';
 
     /**
      * The API base URL.

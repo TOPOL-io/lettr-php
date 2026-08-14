@@ -3,17 +3,29 @@
 declare(strict_types=1);
 
 use Lettr\Dto\Audience\AudienceContact;
+use Lettr\Dto\Audience\AudienceTopicSubscription;
 use Lettr\Dto\Audience\BulkAttachContactsToListsData;
 use Lettr\Dto\Audience\BulkAttachContactsToListsResult;
+use Lettr\Dto\Audience\BulkAudienceContactError;
+use Lettr\Dto\Audience\BulkAudienceContactRef;
+use Lettr\Dto\Audience\BulkAudienceContactRow;
+use Lettr\Dto\Audience\BulkAudienceContactTopicsData;
 use Lettr\Dto\Audience\BulkCreateAudienceContactsData;
 use Lettr\Dto\Audience\BulkDetachContactsFromListsData;
 use Lettr\Dto\Audience\BulkDetachContactsFromListsResult;
 use Lettr\Dto\Audience\BulkStoreAudienceContactsResult;
+use Lettr\Dto\Audience\BulkSubscribeContactsToTopicsResult;
+use Lettr\Dto\Audience\BulkUnsubscribeContactsFromTopicsResult;
 use Lettr\Dto\Audience\CreateAudienceContactData;
 use Lettr\Dto\Audience\DoubleOptInConfig;
 use Lettr\Dto\Audience\ListAudienceContactsFilter;
 use Lettr\Dto\Audience\UpdateAudienceContactData;
 use Lettr\Enums\AudienceContactStatus;
+use Lettr\Enums\BulkAudienceContactErrorCode;
+use Lettr\Exceptions\ApiException;
+use Lettr\Exceptions\ConflictException;
+use Lettr\Exceptions\ContactAlreadyExistsException;
+use Lettr\Exceptions\InvalidValueException;
 use Lettr\Responses\ListAudienceContactsResponse;
 use Lettr\Services\Audience\AudienceContactService;
 use Lettr\ValueObjects\ContactProperties;
@@ -185,6 +197,165 @@ test('bulkCreate POSTs audience/contacts/bulk and returns counts', function (): 
         ->and($result)->toBeInstanceOf(BulkStoreAudienceContactsResult::class)
         ->and($result->created)->toBe(7)
         ->and($result->alreadyExisted)->toBe(3);
+});
+
+test('bulkCreate sends the per-contact shape with batch-wide lists and topics', function (): void {
+    $transporter = new MockTransporter;
+    $transporter->response = [
+        'created' => 1,
+        'already_existed' => 1,
+        'updated' => 1,
+        'error_count' => 1,
+        'errors' => [
+            ['index' => 2, 'email' => 'nope', 'error_code' => 'invalid_email', 'error' => 'Invalid address.'],
+        ],
+        'contacts' => [
+            ['id' => 'c-1', 'email' => 'cara@example.com', 'created' => true],
+            ['id' => 'c-2', 'email' => 'dan@example.com', 'created' => false],
+        ],
+    ];
+
+    $service = new AudienceContactService($transporter);
+    $result = $service->bulkCreate(BulkCreateAudienceContactsData::forContacts(
+        contacts: [
+            new BulkAudienceContactRow(
+                email: 'cara@example.com',
+                properties: ['plan' => 'pro'],
+                listIds: ['l-vip'],
+                topics: [AudienceTopicSubscription::optOut('t-newsletter')],
+            ),
+            new BulkAudienceContactRow('dan@example.com'),
+        ],
+        listIds: ['l-everyone'],
+        topics: [new AudienceTopicSubscription('t-promos')],
+        properties: ['source' => 'spring-campaign'],
+        updateExisting: true,
+    ));
+
+    expect($transporter->lastUri)->toBe('audience/contacts/bulk')
+        ->and($transporter->lastData)->toBe([
+            'properties' => ['source' => 'spring-campaign'],
+            'contacts' => [
+                [
+                    'email' => 'cara@example.com',
+                    'properties' => ['plan' => 'pro'],
+                    'list_ids' => ['l-vip'],
+                    'topics' => [['id' => 't-newsletter', 'subscription' => 'opt_out']],
+                ],
+                ['email' => 'dan@example.com'],
+            ],
+            'list_ids' => ['l-everyone'],
+            'topics' => [['id' => 't-promos', 'subscription' => 'opt_in']],
+            'update_existing' => true,
+        ])
+        ->and($result->created)->toBe(1)
+        ->and($result->alreadyExisted)->toBe(1)
+        ->and($result->updated)->toBe(1)
+        ->and($result->errorCount)->toBe(1)
+        ->and($result->hasErrors())->toBeTrue()
+        ->and($result->errors[0])->toBeInstanceOf(BulkAudienceContactError::class)
+        ->and($result->errors[0]->index)->toBe(2)
+        ->and($result->errors[0]->errorCode)->toBe(BulkAudienceContactErrorCode::InvalidEmail)
+        ->and($result->contacts[0])->toBeInstanceOf(BulkAudienceContactRef::class)
+        ->and($result->contacts[0]->created)->toBeTrue()
+        ->and($result->contactIds())->toBe(['c-1', 'c-2'])
+        ->and($result->idFor('DAN@example.com'))->toBe('c-2')
+        ->and($result->idFor('nobody@example.com'))->toBeNull();
+});
+
+test('bulkCreate keeps the legacy response readable when the API omits the new fields', function (): void {
+    $transporter = new MockTransporter;
+    $transporter->response = ['created' => 2, 'already_existed' => 0];
+
+    $service = new AudienceContactService($transporter);
+    $result = $service->bulkCreate(new BulkCreateAudienceContactsData(emails: ['a@x.com']));
+
+    expect($result->updated)->toBe(0)
+        ->and($result->errorCount)->toBe(0)
+        ->and($result->errors)->toBe([])
+        ->and($result->contacts)->toBe([])
+        ->and($result->hasErrors())->toBeFalse()
+        ->and($result->contactIds())->toBe([]);
+});
+
+test('bulkCreate rejects a payload with neither emails nor contacts', function (): void {
+    new BulkCreateAudienceContactsData;
+})->throws(InvalidValueException::class);
+
+test('bulkSubscribeTopics POSTs audience/contacts/topics/bulk', function (): void {
+    $transporter = new MockTransporter;
+    $transporter->response = ['subscribed' => 3, 'already_subscribed' => 1, 'total_pairs' => 4];
+
+    $service = new AudienceContactService($transporter);
+    $result = $service->bulkSubscribeTopics(new BulkAudienceContactTopicsData(
+        contactIds: ['c-1', 'c-2'],
+        topicIds: ['t-1', 't-2'],
+    ));
+
+    expect($transporter->lastUri)->toBe('audience/contacts/topics/bulk')
+        ->and($transporter->lastData)->toBe([
+            'contact_ids' => ['c-1', 'c-2'],
+            'topic_ids' => ['t-1', 't-2'],
+        ])
+        ->and($result)->toBeInstanceOf(BulkSubscribeContactsToTopicsResult::class)
+        ->and($result->subscribed)->toBe(3)
+        ->and($result->alreadySubscribed)->toBe(1)
+        ->and($result->totalPairs)->toBe(4);
+});
+
+test('bulkUnsubscribeTopics sends DELETE-with-body to audience/contacts/topics/bulk', function (): void {
+    $transporter = new MockTransporter;
+    $transporter->response = ['unsubscribed' => 2, 'total_pairs' => 4];
+
+    $service = new AudienceContactService($transporter);
+    $result = $service->bulkUnsubscribeTopics(new BulkAudienceContactTopicsData(
+        contactIds: ['c-1', 'c-2'],
+        topicIds: ['t-1', 't-2'],
+    ));
+
+    expect($transporter->lastUri)->toBe('audience/contacts/topics/bulk')
+        ->and($transporter->lastData)->toBe([
+            'contact_ids' => ['c-1', 'c-2'],
+            'topic_ids' => ['t-1', 't-2'],
+        ])
+        ->and($result)->toBeInstanceOf(BulkUnsubscribeContactsFromTopicsResult::class)
+        ->and($result->unsubscribed)->toBe(2)
+        ->and($result->totalPairs)->toBe(4);
+});
+
+test('create maps a 409 duplicate to ContactAlreadyExistsException', function (): void {
+    $transporter = new MockTransporter;
+    $transporter->throws = new ConflictException(
+        'A contact with the email a@b.com already exists.',
+        null,
+        'resource_already_exists',
+    );
+
+    $service = new AudienceContactService($transporter);
+
+    try {
+        $service->create(new CreateAudienceContactData(email: 'a@b.com'));
+        expect(false)->toBeTrue('Expected a ContactAlreadyExistsException.');
+    } catch (ContactAlreadyExistsException $e) {
+        expect($e->email)->toBe('a@b.com')
+            ->and($e->getCode())->toBe(409)
+            ->and($e->errorCode())->toBe('resource_already_exists')
+            ->and($e->getMessage())->toBe('A contact with the email a@b.com already exists.')
+            ->and($e)->toBeInstanceOf(ConflictException::class)
+            ->and($e)->toBeInstanceOf(ApiException::class);
+    }
+});
+
+test('create leaves an unrelated 409 as a plain ConflictException', function (): void {
+    $transporter = new MockTransporter;
+    $transporter->throws = new ConflictException('Nope.', null, 'schedule_cancellation_failed');
+
+    $service = new AudienceContactService($transporter);
+
+    expect(fn () => $service->create(new CreateAudienceContactData(email: 'a@b.com')))
+        ->toThrow(ConflictException::class)
+        ->and(fn () => $service->create(new CreateAudienceContactData(email: 'a@b.com')))
+        ->not->toThrow(ContactAlreadyExistsException::class);
 });
 
 test('bulkAttachLists POSTs audience/contacts/lists/bulk', function (): void {
