@@ -7,9 +7,9 @@ namespace Lettr\Dto\Audience;
 use Lettr\Contracts\Arrayable;
 
 /**
- * A group of segment conditions joined by AND.
+ * A group of segment conditions joined by OR.
  *
- * Multiple groups within a segment are joined by OR.
+ * Multiple groups within a segment are joined by AND — i.e. (A OR B) AND (C OR D).
  */
 final readonly class SegmentConditionGroup implements Arrayable
 {
