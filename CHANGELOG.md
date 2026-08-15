@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.5.1] - 2026-08-15
+
+### Fixed
+- Corrected the segment condition documentation on `SegmentConditionGroup`: conditions **within a group** are joined by `OR`, and **groups** are joined by `AND` — i.e. `(A OR B) AND (C OR D)`. The previous docblocks stated the inverse. No behaviour change — the API has always evaluated segments this way, and no code paths were touched. Worth a read if you built a segment against the old description, since it may target a wider or narrower audience than you intended.
+
 ## [2.5.0] - 2026-08-13
 
 Covers the reworked bulk contact import. Everything here is additive — code written against 2.4.0 keeps compiling and sending the exact same payloads.
