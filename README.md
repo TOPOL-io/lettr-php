@@ -11,7 +11,7 @@ Official PHP SDK for the [Lettr](https://lettr.com) email API.
 ## Requirements
 
 - PHP 8.4+
-- Guzzle HTTP client 7.5+
+- Guzzle HTTP client 7.5+ or 8.x
 
 ## Installation
 
