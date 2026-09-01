@@ -13,8 +13,9 @@ jobs:
     strategy:
       matrix:
         php: ['8.4']
+        guzzle: ['^7.5', '^8.0']
 
-    name: PHP ${{ matrix.php }}
+    name: PHP ${{ matrix.php }} / Guzzle ${{ matrix.guzzle }}
 
     steps:
       - name: Checkout code
@@ -29,6 +30,9 @@ jobs:
 
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Pin Guzzle ${{ matrix.guzzle }}
+        run: composer update "guzzlehttp/guzzle:${{ matrix.guzzle }}" --with-all-dependencies --no-interaction --no-progress
 
       - name: Run Pint (code style)
         run: composer lint -- --test
