@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.5.2] - 2026-09-01
+
+### Changed
+- Allow `guzzlehttp/guzzle` `^8.0` alongside `^7.5`. Fresh Laravel 13 installs now lock Guzzle 8, which made `composer require lettr/lettr-php` (and `lettr/lettr-laravel`) unresolvable without `-W`. No code changes were needed — the client only uses `Client::request()` with `headers`/`json`/`query` options, which are unchanged in Guzzle 8. The test suite and a live API smoke test pass on both Guzzle 7.15 and 8.1.
+
 ## [2.5.1] - 2026-08-15
 
 ### Fixed
