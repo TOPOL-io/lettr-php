@@ -12,6 +12,7 @@ use Lettr\Dto\Template\Template;
 use Lettr\Dto\Template\TemplateDetail;
 use Lettr\Dto\Template\UpdatedTemplate;
 use Lettr\Dto\Template\UpdateTemplateData;
+use Lettr\Enums\TemplatePurpose;
 use Lettr\Responses\GetMergeTagsResponse;
 use Lettr\Responses\GetTemplateHtmlResponse;
 use Lettr\Responses\ListTemplatesResponse;
@@ -505,4 +506,238 @@ test('getHtml GET templates/html with project and slug', function (): void {
         ->and($response->subject)->toBe('Hello there')
         ->and($response->mergeTags[0]->key)->toBe('FIRST_NAME')
         ->and($response->mergeTags[0]->type)->toBe('text');
+});
+
+test('list method exposes the purpose of each template', function (): void {
+    $transporter = new MockTransporter;
+    $transporter->response = [
+        'templates' => [
+            [
+                'id' => 1,
+                'name' => 'Welcome Email',
+                'slug' => 'welcome-email',
+                'project_id' => 123,
+                'folder_id' => 5,
+                'purpose' => 'transactional',
+                'created_at' => '2024-01-01T12:00:00+00:00',
+                'updated_at' => '2024-01-15T12:00:00+00:00',
+            ],
+            [
+                'id' => 2,
+                'name' => 'October Newsletter',
+                'slug' => 'october-newsletter',
+                'project_id' => 123,
+                'folder_id' => 6,
+                'purpose' => 'campaign',
+                'created_at' => '2024-01-02T12:00:00+00:00',
+                'updated_at' => '2024-01-16T12:00:00+00:00',
+            ],
+        ],
+        'pagination' => [
+            'current_page' => 1,
+            'last_page' => 1,
+            'per_page' => 15,
+            'total' => 2,
+        ],
+    ];
+
+    $service = new TemplateService($transporter);
+    $response = $service->list();
+
+    expect($response->templates->all()[0]->purpose)->toBe(TemplatePurpose::Transactional)
+        ->and($response->templates->all()[1]->purpose)->toBe(TemplatePurpose::Campaign);
+});
+
+test('list method sends the purpose filter', function (): void {
+    $transporter = new MockTransporter;
+    $transporter->response = [
+        'templates' => [],
+        'pagination' => [
+            'current_page' => 1,
+            'last_page' => 1,
+            'per_page' => 25,
+            'total' => 0,
+        ],
+    ];
+
+    $service = new TemplateService($transporter);
+    $service->list(new ListTemplatesFilter(projectId: 456, purpose: TemplatePurpose::Campaign));
+
+    expect($transporter->lastQuery)->toBe([
+        'project_id' => 456,
+        'purpose' => 'campaign',
+    ]);
+});
+
+test('Template DTO defaults purpose to transactional when the API omits it', function (): void {
+    $template = Template::from([
+        'id' => 1,
+        'name' => 'Test Template',
+        'slug' => 'test-template',
+        'project_id' => 123,
+        'folder_id' => 5,
+        'created_at' => '2024-01-01T12:00:00+00:00',
+        'updated_at' => '2024-01-15T12:00:00+00:00',
+    ]);
+
+    expect($template->purpose)->toBe(TemplatePurpose::Transactional);
+});
+
+test('Template DTO reads an unknown purpose as transactional', function (): void {
+    $template = Template::from([
+        'id' => 1,
+        'name' => 'Test Template',
+        'slug' => 'test-template',
+        'project_id' => 123,
+        'folder_id' => 5,
+        'purpose' => 'something-new',
+        'created_at' => '2024-01-01T12:00:00+00:00',
+        'updated_at' => '2024-01-15T12:00:00+00:00',
+    ]);
+
+    expect($template->purpose)->toBe(TemplatePurpose::Transactional);
+});
+
+test('get method returns the purpose', function (): void {
+    $transporter = new MockTransporter;
+    $transporter->response = [
+        'id' => 1,
+        'name' => 'October Newsletter',
+        'slug' => 'october-newsletter',
+        'project_id' => 123,
+        'folder_id' => 6,
+        'purpose' => 'campaign',
+        'active_version' => 1,
+        'versions_count' => 1,
+        'html' => '<html><body>Hi</body></html>',
+        'json' => null,
+        'created_at' => '2024-01-01T12:00:00+00:00',
+        'updated_at' => '2024-01-15T12:00:00+00:00',
+    ];
+
+    $service = new TemplateService($transporter);
+
+    expect($service->get('october-newsletter')->purpose)->toBe(TemplatePurpose::Campaign);
+});
+
+test('create method sends the purpose and returns it', function (): void {
+    $transporter = new MockTransporter;
+    $transporter->response = [
+        'id' => 10,
+        'name' => 'October Newsletter',
+        'slug' => 'october-newsletter',
+        'project_id' => 123,
+        'folder_id' => 6,
+        'purpose' => 'campaign',
+        'active_version' => 1,
+        'merge_tags' => [],
+        'created_at' => '2024-01-20T12:00:00+00:00',
+    ];
+
+    $service = new TemplateService($transporter);
+    $template = $service->create(new CreateTemplateData(
+        name: 'October Newsletter',
+        html: '<html><body>Hi</body></html>',
+        purpose: TemplatePurpose::Campaign,
+    ));
+
+    expect($transporter->lastData)->toBe([
+        'name' => 'October Newsletter',
+        'html' => '<html><body>Hi</body></html>',
+        'purpose' => 'campaign',
+    ])
+        ->and($template->purpose)->toBe(TemplatePurpose::Campaign);
+});
+
+test('CreateTemplateData sends no purpose key when it is not set', function (): void {
+    $data = new CreateTemplateData(
+        name: 'Test',
+        html: '<html><body>Hi</body></html>',
+    );
+
+    expect($data->toArray())->toBe([
+        'name' => 'Test',
+        'html' => '<html><body>Hi</body></html>',
+    ])
+        ->and($data->toArray())->not->toHaveKey('purpose');
+});
+
+test('update method returns the purpose', function (): void {
+    $transporter = new MockTransporter;
+    $transporter->response = [
+        'id' => 10,
+        'name' => 'October Newsletter',
+        'slug' => 'october-newsletter',
+        'project_id' => 123,
+        'folder_id' => 6,
+        'purpose' => 'campaign',
+        'active_version' => 2,
+        'merge_tags' => [],
+        'created_at' => '2024-01-20T12:00:00+00:00',
+        'updated_at' => '2024-01-21T12:00:00+00:00',
+    ];
+
+    $service = new TemplateService($transporter);
+    $template = $service->update('october-newsletter', new UpdateTemplateData(name: 'October Newsletter'));
+
+    expect($template->purpose)->toBe(TemplatePurpose::Campaign);
+});
+
+test('ListTemplatesFilter carries the purpose', function (): void {
+    $filter = ListTemplatesFilter::create()
+        ->projectId(123)
+        ->purpose(TemplatePurpose::Campaign)
+        ->perPage(20);
+
+    expect($filter->purpose)->toBe(TemplatePurpose::Campaign)
+        ->and($filter->hasFilters())->toBeTrue()
+        ->and($filter->toArray())->toBe([
+            'project_id' => 123,
+            'purpose' => 'campaign',
+            'per_page' => 20,
+        ]);
+});
+
+test('ListTemplatesFilter with only a purpose has filters', function (): void {
+    $filter = ListTemplatesFilter::create()->purpose(TemplatePurpose::Transactional);
+
+    expect($filter->hasFilters())->toBeTrue()
+        ->and($filter->toArray())->toBe(['purpose' => 'transactional']);
+});
+
+test('TemplateCollection filterByPurpose', function (): void {
+    $templates = TemplateCollection::from([
+        Template::from([
+            'id' => 1,
+            'name' => 'Welcome Email',
+            'slug' => 'welcome-email',
+            'project_id' => 123,
+            'folder_id' => 5,
+            'purpose' => 'transactional',
+            'created_at' => '2024-01-01T12:00:00+00:00',
+            'updated_at' => '2024-01-15T12:00:00+00:00',
+        ]),
+        Template::from([
+            'id' => 2,
+            'name' => 'October Newsletter',
+            'slug' => 'october-newsletter',
+            'project_id' => 123,
+            'folder_id' => 6,
+            'purpose' => 'campaign',
+            'created_at' => '2024-01-02T12:00:00+00:00',
+            'updated_at' => '2024-01-16T12:00:00+00:00',
+        ]),
+    ]);
+
+    $campaign = $templates->filterByPurpose(TemplatePurpose::Campaign);
+
+    expect($campaign->count())->toBe(1)
+        ->and($campaign->all()[0]->slug)->toBe('october-newsletter')
+        ->and($templates->filterByPurpose(TemplatePurpose::Transactional)->count())->toBe(1);
+});
+
+test('TemplatePurpose labels', function (): void {
+    expect(TemplatePurpose::Transactional->label())->toBe('Transactional')
+        ->and(TemplatePurpose::Campaign->label())->toBe('Campaign')
+        ->and(TemplatePurpose::from('campaign'))->toBe(TemplatePurpose::Campaign);
 });

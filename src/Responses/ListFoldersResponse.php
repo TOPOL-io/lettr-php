@@ -4,30 +4,29 @@ declare(strict_types=1);
 
 namespace Lettr\Responses;
 
-use Lettr\Collections\TemplateCollection;
-use Lettr\Dto\Template\Template;
+use Lettr\Collections\FolderCollection;
+use Lettr\Dto\Folder\Folder;
 
 /**
- * Response from listing templates.
+ * Response from listing folders.
  */
-final readonly class ListTemplatesResponse
+final readonly class ListFoldersResponse
 {
     public function __construct(
-        public TemplateCollection $templates,
-        public TemplatePagination $pagination,
+        public FolderCollection $folders,
+        public FolderPagination $pagination,
     ) {}
 
     /**
      * Create from an API response array.
      *
      * @param  array{
-     *     templates: array<int, array{
+     *     folders: array<int, array{
      *         id: int,
      *         name: string,
-     *         slug: string,
      *         project_id: int,
-     *         folder_id?: int|null,
      *         purpose?: string|null,
+     *         templates_count?: int,
      *         created_at: string,
      *         updated_at: string,
      *     }>,
@@ -37,13 +36,13 @@ final readonly class ListTemplatesResponse
     public static function from(array $data): self
     {
         return new self(
-            templates: TemplateCollection::from(
+            folders: FolderCollection::from(
                 array_map(
-                    static fn (array $template): Template => Template::from($template),
-                    $data['templates']
+                    static fn (array $folder): Folder => Folder::from($folder),
+                    $data['folders']
                 )
             ),
-            pagination: TemplatePagination::from($data['pagination']),
+            pagination: FolderPagination::from($data['pagination']),
         );
     }
 

@@ -9,6 +9,7 @@ use Countable;
 use IteratorAggregate;
 use JsonSerializable;
 use Lettr\Dto\Template\Template;
+use Lettr\Enums\TemplatePurpose;
 use Traversable;
 
 /**
@@ -89,6 +90,19 @@ final readonly class TemplateCollection implements Countable, IteratorAggregate,
             array_filter(
                 $this->items,
                 static fn (Template $template): bool => $template->folderId === $folderId
+            )
+        );
+    }
+
+    /**
+     * Filter templates by module.
+     */
+    public function filterByPurpose(TemplatePurpose $purpose): self
+    {
+        return new self(
+            array_filter(
+                $this->items,
+                static fn (Template $template): bool => $template->purpose === $purpose
             )
         );
     }
