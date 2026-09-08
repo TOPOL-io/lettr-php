@@ -5,18 +5,25 @@ declare(strict_types=1);
 namespace Lettr\Dto\Template;
 
 use Lettr\Contracts\Arrayable;
+use Lettr\Enums\TemplatePurpose;
 
 /**
  * Data Transfer Object for creating a template.
  */
 final readonly class CreateTemplateData implements Arrayable
 {
+    /**
+     * @param  TemplatePurpose|null  $purpose  Which module the template belongs
+     *                                         to. Omitted means the API decides,
+     *                                         which today is `Transactional`.
+     */
     public function __construct(
         public string $name,
         public ?int $projectId = null,
         public ?int $folderId = null,
         public ?string $html = null,
         public ?string $json = null,
+        public ?TemplatePurpose $purpose = null,
     ) {}
 
     /**
@@ -44,6 +51,10 @@ final readonly class CreateTemplateData implements Arrayable
 
         if ($this->json !== null) {
             $data['json'] = $this->json;
+        }
+
+        if ($this->purpose !== null) {
+            $data['purpose'] = $this->purpose->value;
         }
 
         return $data;

@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-namespace Lettr\Dto\Template;
+namespace Lettr\Dto\Folder;
 
 use Lettr\Contracts\Arrayable;
 use Lettr\Enums\TemplatePurpose;
 
 /**
- * Filter parameters for listing templates.
+ * Filter parameters for listing folders.
  */
-final readonly class ListTemplatesFilter implements Arrayable
+final readonly class ListFoldersFilter implements Arrayable
 {
     public function __construct(
         public ?int $projectId = null,
+        public ?TemplatePurpose $purpose = null,
         public ?int $perPage = null,
         public ?int $page = null,
-        public ?TemplatePurpose $purpose = null,
     ) {}
 
     /**
@@ -34,9 +34,9 @@ final readonly class ListTemplatesFilter implements Arrayable
     {
         return new self(
             projectId: $projectId,
+            purpose: $this->purpose,
             perPage: $this->perPage,
             page: $this->page,
-            purpose: $this->purpose,
         );
     }
 
@@ -47,9 +47,9 @@ final readonly class ListTemplatesFilter implements Arrayable
     {
         return new self(
             projectId: $this->projectId,
+            purpose: $purpose,
             perPage: $this->perPage,
             page: $this->page,
-            purpose: $purpose,
         );
     }
 
@@ -60,9 +60,9 @@ final readonly class ListTemplatesFilter implements Arrayable
     {
         return new self(
             projectId: $this->projectId,
+            purpose: $this->purpose,
             perPage: $perPage,
             page: $this->page,
-            purpose: $this->purpose,
         );
     }
 
@@ -73,9 +73,9 @@ final readonly class ListTemplatesFilter implements Arrayable
     {
         return new self(
             projectId: $this->projectId,
+            purpose: $this->purpose,
             perPage: $this->perPage,
             page: $page,
-            purpose: $this->purpose,
         );
     }
 

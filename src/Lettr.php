@@ -6,10 +6,12 @@ namespace Lettr;
 
 use Lettr\Contracts\TransporterContract;
 use Lettr\Dto\RateLimit;
+use Lettr\Dto\Template\CreateTemplateData;
 use Lettr\Services\AudienceService;
 use Lettr\Services\CampaignService;
 use Lettr\Services\DomainService;
 use Lettr\Services\EmailService;
+use Lettr\Services\FolderService;
 use Lettr\Services\HealthService;
 use Lettr\Services\ProjectService;
 use Lettr\Services\TemplateService;
@@ -23,6 +25,7 @@ use Lettr\Services\WebhookService;
  * @property-read WebhookService $webhooks
  * @property-read TemplateService $templates
  * @property-read ProjectService $projects
+ * @property-read FolderService $folders
  * @property-read AudienceService $audience
  * @property-read CampaignService $campaigns
  * @property-read HealthService $health
@@ -36,7 +39,7 @@ final class Lettr
      *             single source of truth for the version and will be removed in
      *             a future major release.
      */
-    public const VERSION = '2.5.2';
+    public const VERSION = '2.6.0';
 
     /**
      * The API base URL.
@@ -52,6 +55,8 @@ final class Lettr
     private ?TemplateService $templateService = null;
 
     private ?ProjectService $projectService = null;
+
+    private ?FolderService $folderService = null;
 
     private ?AudienceService $audienceService = null;
 
@@ -136,6 +141,22 @@ final class Lettr
     }
 
     /**
+     * Get the folder service.
+     *
+     * Folders are where templates are filed. List them to pick a `folderId`
+     * for {@see CreateTemplateData} instead of
+     * hardcoding one read out of an app URL.
+     */
+    public function folders(): FolderService
+    {
+        if ($this->folderService === null) {
+            $this->folderService = new FolderService($this->client);
+        }
+
+        return $this->folderService;
+    }
+
+    /**
      * Get the audience service (lists, contacts, topics, properties, segments).
      */
     public function audience(): AudienceService
@@ -202,6 +223,7 @@ final class Lettr
             'webhooks' => $this->webhooks(),
             'templates' => $this->templates(),
             'projects' => $this->projects(),
+            'folders' => $this->folders(),
             'audience' => $this->audience(),
             'campaigns' => $this->campaigns(),
             'health' => $this->health(),

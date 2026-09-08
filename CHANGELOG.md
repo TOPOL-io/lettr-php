@@ -4,6 +4,52 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.6.0] - 2026-09-07
+
+Covers the marketing side of templates: a template now says which module it belongs to, and the folders it can be filed into are listable. Everything here is additive — code written against 2.5.2 keeps compiling and sends byte-identical requests.
+
+### Added
+- **`Enums\TemplatePurpose`** (`Transactional`, `Campaign`) — which module a template belongs to. The two do not mix: only campaign templates can be picked by the campaign builder, and only transactional ones can be sent as single emails.
+- **Create a marketing template.** `CreateTemplateData` takes an optional `purpose`:
+
+  ```php
+  $lettr->templates()->create(new CreateTemplateData(
+      name: 'October Newsletter',
+      json: $topolJson,
+      purpose: TemplatePurpose::Campaign,
+  ));
+  ```
+
+  It is emitted only when set, so omitting it sends no `purpose` key at all and the API applies its own default (transactional).
+- **`purpose` on every template response** — `Dto\Template\Template`, `TemplateDetail`, `CreatedTemplate` and `UpdatedTemplate`. Always a `TemplatePurpose`, never null: a response without the key (an API that has not deployed the field yet) reads as `Transactional`, which is what such a template is.
+- **Filter the list by module.** `ListTemplatesFilter` takes a `purpose`, fluently too — `ListTemplatesFilter::create()->purpose(TemplatePurpose::Campaign)`. Omitting it returns both modules, exactly as before.
+- `TemplateCollection::filterByPurpose()`, alongside the existing `filterByProject()` and `filterByFolder()`.
+- **Folders are listable — `$lettr->folders()`.** `FolderService::list(?ListFoldersFilter)` wraps `GET /folders` and returns a `ListFoldersResponse` (a `FolderCollection` plus pagination). Each `Dto\Folder\Folder` carries `id`, `name`, `projectId`, `purpose`, `templatesCount` and timestamps.
+
+  This is what `CreateTemplateData::$folderId` was missing: nothing in the SDK ever returned a folder id, so a caller either omitted `folderId` and accepted whichever folder the API picked, or hardcoded an integer read out of an app URL by hand. Now:
+
+  ```php
+  $campaigns = $lettr->folders()
+      ->list(ListFoldersFilter::create()->purpose(TemplatePurpose::Campaign))
+      ->folders
+      ->first();
+
+  $lettr->templates()->create(new CreateTemplateData(
+      name: 'October Newsletter',
+      folderId: $campaigns?->id,
+      json: $topolJson,
+      purpose: TemplatePurpose::Campaign,
+  ));
+  ```
+
+  `ListFoldersFilter` takes `projectId`, `purpose`, `perPage` and `page`; without a `projectId` the team's default project is used, the same way `templates()->list()` resolves it. `FolderCollection` adds `first()`, `findById()`, `findByName()` and `filterByPurpose()`.
+
+  Read-only by design: creating, renaming and deleting folders stay in the app, because deleting one moves or deletes the templates inside it.
+
+### Notes
+- `UpdateTemplateData` deliberately has **no** `purpose`. `PUT /templates/{slug}` does not accept one, and moving a template across modules has to copy its versions and merge tags into the other module's folder — a separate endpoint that does not exist yet. Set the purpose at create time.
+- The new constructor parameters were appended last on the existing DTOs, so positional construction keeps working. On `ListTemplatesFilter` that puts `purpose` after `page`; the fluent `->purpose()` reads better and is the documented way.
+
 ## [2.5.2] - 2026-09-01
 
 ### Changed

@@ -7,6 +7,7 @@ use Lettr\Services\AudienceService;
 use Lettr\Services\CampaignService;
 use Lettr\Services\DomainService;
 use Lettr\Services\EmailService;
+use Lettr\Services\FolderService;
 use Lettr\Services\ProjectService;
 use Lettr\Services\TemplateService;
 use Lettr\Services\WebhookService;
@@ -101,6 +102,27 @@ test('templates service is cached', function (): void {
     expect($templates1)->toBe($templates2);
 });
 
+test('can access folders service via method', function (): void {
+    $lettr = Lettr::client('test-api-key');
+
+    expect($lettr->folders())->toBeInstanceOf(FolderService::class);
+});
+
+test('can access folders service via property', function (): void {
+    $lettr = Lettr::client('test-api-key');
+
+    expect($lettr->folders)->toBeInstanceOf(FolderService::class);
+});
+
+test('folders service is cached', function (): void {
+    $lettr = Lettr::client('test-api-key');
+
+    $folders1 = $lettr->folders();
+    $folders2 = $lettr->folders();
+
+    expect($folders1)->toBe($folders2);
+});
+
 test('can access projects service via method', function (): void {
     $lettr = Lettr::client('test-api-key');
 
@@ -171,7 +193,7 @@ test('throws exception for unknown service', function (): void {
 })->throws(InvalidArgumentException::class, 'Unknown service: unknownService');
 
 test('has correct version constant', function (): void {
-    expect(Lettr::VERSION)->toBe('2.5.2');
+    expect(Lettr::VERSION)->toBe('2.6.0');
 });
 
 test('has correct base url constant', function (): void {

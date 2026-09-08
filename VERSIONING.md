@@ -84,6 +84,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the full notes; the table below lists each 
 
 | Version | Type     | Highlights                                                                                     |
 | :------ | :------- | :--------------------------------------------------------------------------------------------- |
+| `2.6.0` | Minor    | `TemplatePurpose` on create/list/responses, folder listing (`$lettr->folders()`)             |
 | `2.5.0` | Minor    | Per-contact bulk import (rows, batch lists/topics, `update_existing`, partial-failure reporting), bulk topic subscribe/unsubscribe, `ContactAlreadyExistsException` |
 | `2.4.0` | Minor    | Optional `User-Agent` suffix for wrapping packages                                             |
 | `2.3.0` | Minor    | `CampaignDetail` split off `CampaignSummary`                                                   |

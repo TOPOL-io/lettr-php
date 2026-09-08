@@ -2,25 +2,28 @@
 
 declare(strict_types=1);
 
-namespace Lettr\Dto\Template;
+namespace Lettr\Dto\Folder;
 
 use Lettr\Enums\TemplatePurpose;
 use Lettr\ValueObjects\Timestamp;
 
 /**
- * Template list item.
+ * Folder list item.
+ *
+ * `$id` is what `CreateTemplateData::$folderId` expects, so listing folders is
+ * how a caller picks where a template lands without hardcoding an integer read
+ * out of an app URL.
  */
-final readonly class Template
+final readonly class Folder
 {
     public function __construct(
         public int $id,
         public string $name,
-        public string $slug,
         public int $projectId,
-        public ?int $folderId,
+        public TemplatePurpose $purpose,
+        public int $templatesCount,
         public Timestamp $createdAt,
         public Timestamp $updatedAt,
-        public TemplatePurpose $purpose = TemplatePurpose::Transactional,
     ) {}
 
     /**
@@ -29,10 +32,9 @@ final readonly class Template
      * @param  array{
      *     id: int,
      *     name: string,
-     *     slug: string,
      *     project_id: int,
-     *     folder_id?: int|null,
      *     purpose?: string|null,
+     *     templates_count?: int,
      *     created_at: string,
      *     updated_at: string,
      * }  $data
@@ -42,12 +44,11 @@ final readonly class Template
         return new self(
             id: $data['id'],
             name: $data['name'],
-            slug: $data['slug'],
             projectId: $data['project_id'],
-            folderId: $data['folder_id'] ?? null,
+            purpose: TemplatePurpose::tryFrom((string) ($data['purpose'] ?? '')) ?? TemplatePurpose::Transactional,
+            templatesCount: $data['templates_count'] ?? 0,
             createdAt: Timestamp::fromString($data['created_at']),
             updatedAt: Timestamp::fromString($data['updated_at']),
-            purpose: TemplatePurpose::tryFrom((string) ($data['purpose'] ?? '')) ?? TemplatePurpose::Transactional,
         );
     }
 }

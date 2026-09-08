@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Lettr\Dto\Template;
 
+use Lettr\Enums\TemplatePurpose;
 use Lettr\ValueObjects\Timestamp;
 
 /**
@@ -23,6 +24,7 @@ final readonly class TemplateDetail
         public ?string $json,
         public Timestamp $createdAt,
         public Timestamp $updatedAt,
+        public TemplatePurpose $purpose = TemplatePurpose::Transactional,
     ) {}
 
     /**
@@ -34,6 +36,7 @@ final readonly class TemplateDetail
      *     slug: string,
      *     project_id: int,
      *     folder_id?: int|null,
+     *     purpose?: string|null,
      *     active_version?: int|null,
      *     versions_count?: int,
      *     html?: string|null,
@@ -56,6 +59,7 @@ final readonly class TemplateDetail
             json: $data['json'] ?? null,
             createdAt: Timestamp::fromString($data['created_at']),
             updatedAt: Timestamp::fromString($data['updated_at']),
+            purpose: TemplatePurpose::tryFrom((string) ($data['purpose'] ?? '')) ?? TemplatePurpose::Transactional,
         );
     }
 }
